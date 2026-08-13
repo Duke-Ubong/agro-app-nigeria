@@ -109,9 +109,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogi
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="pt-1"
+            className="pt-1 flex flex-col items-center"
           >
-            <AgroAppLogo iconSize={38} textSize="text-3xl sm:text-4xl" />
+            <AgroAppLogo
+              iconSize={46}
+              textSize="text-3xl sm:text-4xl"
+              showSubtag
+              subtext="Federal Ministry of Agriculture • USUCO Agro-Connect"
+            />
           </motion.div>
         </div>
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
+import { AgroAppLogo } from '../common/AgroAppLogo';
 import { getNigerianAvatar } from '../../utils/avatarUtils';
 
 interface HeaderProps {
@@ -70,27 +71,20 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             </button>
           )}
 
-          <button
-            onClick={() => setActiveView('dashboard')}
-            className="flex items-center gap-2 text-left group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-[#012d1d] text-white flex items-center justify-center shadow-sm group-hover:bg-[#1b4332] transition-colors">
-              <span className="material-symbols-outlined text-[22px] fill-icon">agriculture</span>
-            </div>
-            <div>
-              <div className="font-heading font-bold text-lg leading-tight text-[#012d1d] flex items-center gap-1.5">
-                <span>AgroApp</span>
-                {isAdmin && (
-                  <span className="text-[10px] font-bold bg-[#ba1a1a] text-white px-1.5 py-0.2 rounded uppercase">
-                    Admin
-                  </span>
-                )}
-              </div>
-              <div className="text-[10px] text-[#717973] font-medium leading-none">
-                {user.state || 'Nigeria Digital Platform'}
-              </div>
-            </div>
-          </button>
+          <div className="flex items-center gap-2">
+            <AgroAppLogo
+              iconSize={32}
+              textSize="text-lg"
+              showSubtag
+              subtext={user.state ? `${user.state} • Platform` : 'Nigeria Digital Platform'}
+              onClick={() => setActiveView('dashboard')}
+            />
+            {isAdmin && (
+              <span className="text-[10px] font-bold bg-[#ba1a1a] text-white px-1.5 py-0.5 rounded uppercase self-start mt-1 shadow-xs">
+                Admin
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Center/Right Actions */}
