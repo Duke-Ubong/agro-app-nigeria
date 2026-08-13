@@ -5,6 +5,10 @@ import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { AgroAppLogo } from '../../components/common/AgroAppLogo';
 
+import cooperativeFarmImg from '../../assets/images/african_cooperative_farm_1786635857001.jpg';
+import marketProduceImg from '../../assets/images/african_market_produce_1786635867422.jpg';
+import agritechLogisticsImg from '../../assets/images/african_agritech_logistics_1786635878572.jpg';
+
 interface SplashScreenProps {
   onGetStarted?: () => void;
   onLogin?: () => void;
@@ -16,21 +20,21 @@ const HIGHLIGHT_SLIDES = [
     badge: 'Cooperative Hubs',
     title: 'Aggregated Produce & Direct Off-take',
     desc: 'Connecting 40M+ farmers directly with food processors and state grain reserves.',
-    img: 'https://images.unsplash.com/photo-1592417817098-8f3d6ef23a80?w=800&auto=format&fit=crop&q=80',
+    img: cooperativeFarmImg,
   },
   {
     icon: <TrendingUp className="w-4 h-4 text-[#e0a000]" />,
     badge: 'Live Naira Prices',
     title: 'Real-time Market Transparency',
     desc: 'Track commodity rates across Dawanau, Bodija, Mile 12, and Zaki Biam markets.',
-    img: 'https://images.unsplash.com/photo-1523348837708-15d4a09cfac2?w=800&auto=format&fit=crop&q=80',
+    img: marketProduceImg,
   },
   {
     icon: <Truck className="w-4 h-4 text-[#053221]" />,
     badge: 'Interstate Logistics',
     title: 'Tracked Cold-chain & Haulage',
     desc: 'Guaranteed waybills and transport route assignment across 36 States & FCT.',
-    img: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80',
+    img: agritechLogisticsImg,
   },
 ];
 
@@ -114,12 +118,13 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogi
         {/* Dynamic Hero Carousel Card */}
         <div className="w-full flex-1 flex flex-col justify-center items-center my-3 z-10 space-y-4 max-w-lg">
           {/* Animated Media Frame */}
-          <div className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-[#dce4de] bg-[#053221] relative group">
+          <div className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-[#dce4de] bg-slate-100 relative group">
             <AnimatePresence mode="wait">
               <motion.img
                 key={currentSlide.img}
                 src={currentSlide.img}
                 alt={currentSlide.title}
+                referrerPolicy="no-referrer"
                 initial={{ opacity: 0, scale: 1.05 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
@@ -128,8 +133,8 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogi
               />
             </AnimatePresence>
 
-            {/* Gradient Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#012d1d]/85 via-[#012d1d]/30 to-transparent" />
+            {/* Gradient Overlay for bottom readable badges */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
 
             {/* Top Floating Glass Badge */}
             <div className="absolute top-3 left-3 bg-[#012d1d]/80 backdrop-blur-md text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg border border-white/20 flex items-center gap-1.5 shadow-md">
