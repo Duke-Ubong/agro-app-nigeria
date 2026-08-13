@@ -1,0 +1,6 @@
+{
+  "name": "Agro App",
+  "description": "Nationwide agricultural digital platform for Nigeria, developed for the Federal Ministry of Agriculture and Food Security in partnership with USUCO Agro-Connect Consultancy Ltd.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
