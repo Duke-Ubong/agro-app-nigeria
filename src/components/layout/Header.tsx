@@ -20,6 +20,88 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const isInstAdmin = role === 'institutional_admin';
   const isAdmin = isSuperAdmin || isGovAdmin || isInstAdmin;
 
+  // ==========================================
+  // SUPER ADMIN SPECIFIC HEADER RENDER
+  // ==========================================
+  if (isSuperAdmin && activeView === 'admin') {
+    return (
+      <header className="sticky top-0 z-40 bg-[#0a0f18] border-b border-[#1e293b] shadow-2xl">
+        <div className="max-w-[1440px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          
+          <div className="flex items-center gap-4 min-w-0">
+            {onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className="md:hidden p-1.5 rounded-xl text-[#94a3b8] hover:bg-[#1e293b] active:scale-95 transition-all border border-transparent hover:border-[#334155]"
+                aria-label="Toggle navigation"
+              >
+                <span className="material-symbols-outlined text-[24px]">menu</span>
+              </button>
+            )}
+
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                <span className="material-symbols-outlined text-white text-[18px]">admin_panel_settings</span>
+              </div>
+              <div className="hidden sm:block">
+                <h2 className="font-heading font-extrabold text-[#f1f5f9] text-sm tracking-wide flex items-center gap-2">
+                  <span>AGRO-CONNECT</span>
+                  <span className="text-[9px] font-bold bg-[#1e293b] text-emerald-400 px-1.5 py-0.5 rounded-sm border border-[#334155] uppercase">Command Center</span>
+                </h2>
+              </div>
+            </div>
+
+            {/* Global Search */}
+            <div className="hidden lg:flex flex-1 max-w-md ml-4 relative">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-[#64748b]">search</span>
+              <input
+                type="text"
+                placeholder="Search telemetry, user IDs, or transactions..."
+                className="w-full bg-[#111927] border border-[#1e293b] rounded-full py-1.5 pl-10 pr-4 text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+              />
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[9px] font-mono text-[#64748b] bg-[#1e293b] rounded border border-[#334155]">⌘</kbd>
+                <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[9px] font-mono text-[#64748b] bg-[#1e293b] rounded border border-[#334155]">K</kbd>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Quick Emergency Button */}
+            <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 rounded-full text-xs font-bold transition-all cursor-pointer">
+              <span className="material-symbols-outlined text-[16px]">emergency</span>
+              <span>Emergency Controls</span>
+            </button>
+
+            <div className="w-px h-6 bg-[#1e293b] mx-1 hidden sm:block" />
+
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-1.5 rounded-full text-[#94a3b8] hover:text-white hover:bg-[#1e293b] relative transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">notifications</span>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full border border-[#0a0f18] animate-pulse" />
+            </button>
+
+            <button
+              onClick={() => setActiveView('profile')}
+              className="flex items-center gap-2 p-1 rounded-full hover:bg-[#1e293b] transition-colors border border-[#1e293b] cursor-pointer"
+            >
+              <img
+                src={user.photoUrl || getNigerianAvatar(user.name)}
+                alt={user.name}
+                className="w-7 h-7 rounded-full object-cover border border-emerald-500/30"
+              />
+            </button>
+          </div>
+        </div>
+      </header>
+    );
+  }
+
+  // ==========================================
+  // STANDARD HEADER RENDER
+  // ==========================================
   return (
     <header className="sticky top-0 z-40 bg-[#f9f9f9] border-b border-[#c1c8c2] shadow-xs">
       {/* Top Banner Partnership Notice */}

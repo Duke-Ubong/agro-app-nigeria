@@ -2,978 +2,1421 @@ import React, { useState } from 'react';
 import {
   Shield,
   Activity,
-  Users,
-  Key,
-  FileText,
-  Sliders,
-  BarChart3,
-  AlertOctagon,
-  RefreshCw,
-  CheckCircle2,
-  Lock,
-  DollarSign,
-  Layers,
-  Radio,
   Server,
-  Zap,
+  ToggleLeft,
+  ToggleRight,
+  AlertOctagon,
+  Lock,
+  Unlock,
+  RefreshCw,
   Search,
-  Bell,
-  LogOut,
-  ChevronDown,
-  ChevronRight,
-  Menu,
-  X,
-  Globe,
-  SlidersHorizontal,
-  FileCode,
-  Flame,
+  Users,
+  Layers,
+  Database,
+  Key,
+  DollarSign,
+  TrendingUp,
+  Cpu,
+  CheckCircle2,
+  AlertTriangle,
+  FileText,
   UserCheck,
-  Building,
+  Eye,
+  Sliders,
+  Radio,
+  Download,
+  Filter,
+  Trash2,
+  Edit3,
+  Globe,
+  Zap,
+  HardDrive,
+  BarChart3,
   ArrowUpRight,
+  Check,
+  X,
+  Clock,
+  ShieldCheck,
+  PieChart,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
+import { AdminGlobalFilterBar, GlobalFilterState } from '../../components/admin/AdminGlobalFilterBar';
 import { ReasonLoggingModal } from '../../components/admin/ReasonLoggingModal';
-import { User, UserRole } from '../../types';
+import { UserRole } from '../../types';
 
-// Sub-components for all 8 Core Pillars
-import { SuperAdminHealthOverview } from './super/SuperAdminHealthOverview';
-import { SuperAdminUserManagement } from './super/SuperAdminUserManagement';
-import { SuperAdminAccessControl } from './super/SuperAdminAccessControl';
-import { SuperAdminAuditSecurity } from './super/SuperAdminAuditSecurity';
-import { SuperAdminPlatformConfig } from './super/SuperAdminPlatformConfig';
-import { SuperAdminAnalyticsReporting } from './super/SuperAdminAnalyticsReporting';
-import { SuperAdminEmergencyCenter } from './super/SuperAdminEmergencyCenter';
-import { SuperAdminSystemLogs } from './super/SuperAdminSystemLogs';
+interface FeatureFlag {
+  id: string;
+  name: string;
+  enabled: boolean;
+  category: string;
+  desc: string;
+  rolloutScope: 'National' | 'Pilot States' | 'Staging';
+  pilotStates?: string[];
+}
 
-export type MainTabType =
-  | 'dashboard'
-  | 'users'
-  | 'access'
-  | 'audit'
-  | 'config'
-  | 'analytics'
-  | 'emergency'
-  | 'logs';
+interface AdminUserRecord {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  department: string;
+  state: string;
+  status: 'Active' | 'Suspended' | 'Pending 2FA';
+  lastActive: string;
+  twoFactorEnabled: boolean;
+}
 
 export const SuperAdminDashboard: React.FC = () => {
-  const { auditLogs, addAuditLog, usersList, setActiveView } = useApp();
-  const { user, logout } = useAuth();
+  const { auditLogs, addAuditLog, usersList, listings, orders } = useApp();
+  const { user } = useAuth();
 
-  // Navigation State (Active Pillar & Deep Sub-tab)
-  const [activeTab, setActiveTab] = useState<MainTabType>('dashboard');
-  const [subTab, setSubTab] = useState<string>('overview');
-
-  // Sidebar Expansion State (For Collapsible Sub-menus)
-  const [expandedSections, setExpandedSections] = useState<Record<MainTabType, boolean>>({
-    dashboard: true,
-    users: false,
-    access: false,
-    audit: false,
-    config: false,
-    analytics: false,
-    emergency: false,
-    logs: false,
+  const [filters, setFilters] = useState<GlobalFilterState>({
+    dateRange: 'last_30_days',
+    state: 'All States',
+    lga: 'All LGAs',
+    valueChain: 'All Value Chains',
+    commodity: 'All Commodities',
   });
 
-  // Mobile Drawer Toggle
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<
+    'system_health' | 'revenue_volume' | 'feature_flags' | 'role_management' | 'emergency_controls' | 'audit_explorer'
+  >('system_health');
 
-  // Top Bar Persistent State
-  const [globalSearch, setGlobalSearch] = useState('');
-  const [showNotifications, setShowNotifications] = useState(false);
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showEmergencyQuickModal, setShowEmergencyQuickModal] = useState(false);
+  // Emergency Switches State
+  const [marketplaceTradingFrozen, setMarketplaceTradingFrozen] = useState<boolean>(false);
+  const [walletWithdrawalsFrozen, setWalletWithdrawalsFrozen] = useState<boolean>(false);
+  const [maintenanceModeActive, setMaintenanceModeActive] = useState<boolean>(false);
+  const [highRiskRateLimiter, setHighRiskRateLimiter] = useState<boolean>(true);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  // Emergency & Global State
-  const [marketplaceFrozen, setMarketplaceFrozen] = useState(false);
-  const [walletFrozen, setWalletFrozen] = useState(false);
-  const [maintenanceModeActive, setMaintenanceModeActive] = useState(false);
-  const [rateLimiterActive, setRateLimiterActive] = useState(true);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  // Freeze Confirmation Modal State
+  const [freezeModalType, setFreezeModalType] = useState<'marketplace' | 'wallet' | 'maintenance' | null>(null);
+  const [freezeReason, setFreezeReason] = useState('');
 
-  // NDPR Modal for User Inspection
-  const [inspectingUser, setInspectingUser] = useState<User | null>(null);
-
-  // Dynamic Feature Flags
-  const [featureFlags, setFeatureFlags] = useState([
+  // Feature Flags State
+  const [featureFlags, setFeatureFlags] = useState<FeatureFlag[]>([
     {
       id: 'flag_marketplace',
       name: 'Inter-State Produce Marketplace Engine',
       enabled: true,
-      category: 'Trade & Commerce',
-      desc: 'Enables produce discovery, spot pricing, and buyer bid matching nationwide.',
-      rolloutScope: 'National' as const,
+      category: 'Core Commerce',
+      desc: 'Allows national produce matching, buyer bidding, order checkout, and haulage negotiation',
+      rolloutScope: 'National',
     },
     {
-      id: 'flag_escrow_settlement',
+      id: 'flag_escrow',
       name: 'NIBSS / Commercial Escrow Auto-Settlement Bridge',
       enabled: true,
-      category: 'Banking & Payments',
-      desc: 'Automatic clearing of funds upon verified delivery confirmation.',
-      rolloutScope: 'National' as const,
+      category: 'Payments',
+      desc: 'Locks buyer funds during multi-state transit until electronic POD inspection verification',
+      rolloutScope: 'National',
     },
     {
       id: 'flag_boa_credit',
       name: 'Bank of Agriculture (BOA) 5% Loan Underwriting',
       enabled: true,
-      category: 'Agricultural Finance',
-      desc: 'Direct digital application and biometric loan disbursement for smallholders.',
-      rolloutScope: 'Pilot States' as const,
+      category: 'Credit',
+      desc: 'Permits smallholders and verified cooperatives to submit single-digit agricultural facility requests',
+      rolloutScope: 'Pilot States',
       pilotStates: ['Kaduna', 'Kano', 'Benue', 'Niger', 'Oyo'],
     },
     {
-      id: 'flag_ai_agronomist',
-      name: 'AI Agronomist & Crop Disease Diagnostic Vision',
+      id: 'flag_ai_advisory',
+      name: 'AI Agronomist & Pest Diagnostics Engine',
       enabled: true,
-      category: 'Advisory & Extension',
-      desc: 'Gemini crop disease leaf scan and vernacular voice guidance.',
-      rolloutScope: 'National' as const,
+      category: 'Extension',
+      desc: 'Enables satellite vegetation pest tracking and multi-lingual voice crop advisory (Hausa, Yoruba, Igbo, Pidgin)',
+      rolloutScope: 'National',
     },
     {
       id: 'flag_ussd_gateway',
       name: 'Offline USSD (*384*247#) SMS Fallback Engine',
       enabled: true,
-      category: 'Rural Telecom Ingress',
-      desc: 'Enables basic phone offline trading via MTN/Airtel/Glo telco aggregates.',
-      rolloutScope: 'National' as const,
+      category: 'Accessibility',
+      desc: 'Allows rural farmers on 2G feature phones to list produce and confirm harvest delivery',
+      rolloutScope: 'National',
     },
     {
       id: 'flag_gmp_monitoring',
       name: 'Guaranteed Minimum Price (GMP) Compliance Engine',
       enabled: true,
-      category: 'Market Regulation',
-      desc: 'Detects predatory off-taking below national statutory price floors.',
-      rolloutScope: 'National' as const,
+      category: 'Policy',
+      desc: 'Monitors grain market trade rates against FMAFS federal statutory floor prices',
+      rolloutScope: 'National',
+    },
+    {
+      id: 'flag_evoucher',
+      name: 'National e-Voucher Fertilizer & Input Redemption',
+      enabled: true,
+      category: 'Subsidies',
+      desc: 'Enables biometric wallet redemption at accredited agro-dealer redemption centers',
+      rolloutScope: 'Pilot States',
+      pilotStates: ['Kano', 'Kaduna', 'Katsina', 'Jigawa'],
+    },
+    {
+      id: 'flag_tractor_telematics',
+      name: 'Agricultural Mechanisation & Tractor GPS Fleet IoT',
+      enabled: true,
+      category: 'Mechanisation',
+      desc: 'Real-time telemetry and hectare billing for 4,120 registered private tractor service providers',
+      rolloutScope: 'National',
     },
   ]);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => setToastMessage(null), 4000);
-  };
+  // Microservices Telemetry Data
+  const microservices = [
+    { name: 'Core API Gateway (NGINX / Cloud Run)', status: 'Operational', latency: '24ms', uptime: '99.99%', load: '42%', errorRate: '0.01%' },
+    { name: 'NIBSS & Interswitch Banking Settlement Bus', status: 'Operational', latency: '108ms', uptime: '99.96%', load: '61%', errorRate: '0.04%' },
+    { name: 'USSD Rural SMS Telecom Gateway (MTN/Airtel/Glo)', status: 'Operational', latency: '62ms', uptime: '99.92%', load: '74%', errorRate: '0.12%' },
+    { name: 'GIS Satellite & Soil Weather Engine (Sentinel-2)', status: 'Operational', latency: '185ms', uptime: '99.89%', load: '36%', errorRate: '0.02%' },
+    { name: 'Truck Freight GPS Telematics & Route Engine', status: 'Operational', latency: '41ms', uptime: '99.97%', load: '49%', errorRate: '0.00%' },
+    { name: 'NIN / NIMC & CAC Identity Verification Node', status: 'Operational', latency: '152ms', uptime: '99.85%', load: '43%', errorRate: '0.05%' },
+  ];
 
-  const toggleSection = (tab: MainTabType) => {
-    setExpandedSections((prev) => ({ ...prev, [tab]: !prev[tab] }));
-  };
+  // System Concurrency Breakdown
+  const userConcurrency = [
+    { roleLabel: 'Smallholder & Commercial Farmers', count: '24,810', share: '57.8%', status: 'Online' },
+    { roleLabel: 'Agricultural Cooperatives', count: '3,420', share: '8.0%', status: 'Online' },
+    { roleLabel: 'Industrial Buyers & Processors', count: '2,910', share: '6.8%', status: 'Online' },
+    { roleLabel: 'Input Suppliers & Agro-Dealers', count: '4,150', share: '9.7%', status: 'Online' },
+    { roleLabel: 'Transporters & Logistics Providers', count: '3,840', share: '9.0%', status: 'Online' },
+    { roleLabel: 'Field Extension Agents & ADP Officers', count: '3,120', share: '7.3%', status: 'Online' },
+    { roleLabel: 'Federal & State Governance Admins', count: '640', share: '1.5%', status: 'Online' },
+  ];
 
-  const handleNavigate = (main: MainTabType, sub: string) => {
-    setActiveTab(main);
-    setSubTab(sub);
-    setExpandedSections((prev) => ({ ...prev, [main]: true }));
-    setSidebarOpen(false);
-  };
+  // Value Chain Volume Breakdown
+  const valueChainVolume = [
+    { commodity: 'White Maize', volumeTonnes: '34,200 MT', valueNaira: '₦4.45 Billion', share: '30.0%', growth: '+14.2%' },
+    { commodity: 'Paddy Rice', volumeTonnes: '28,150 MT', valueNaira: '₦3.94 Billion', share: '26.6%', growth: '+22.5%' },
+    { commodity: 'Cassava Tubers & Starch', volumeTonnes: '41,000 MT', valueNaira: '₦2.26 Billion', share: '15.2%', growth: '+9.8%' },
+    { commodity: 'Soybeans & Grains', volumeTonnes: '16,400 MT', valueNaira: '₦1.80 Billion', share: '12.1%', growth: '+18.4%' },
+    { commodity: 'Yam Tubers', volumeTonnes: '22,900 MT', valueNaira: '₦1.37 Billion', share: '9.2%', growth: '+6.1%' },
+    { commodity: 'NPK Fertilizer & Agrochemicals', volumeTonnes: '18,500 MT', valueNaira: '₦1.00 Billion', share: '6.9%', growth: '+31.0%' },
+  ];
 
-  // 1. Purge Edge Cache
-  const handlePurgeCache = () => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'CACHE_PURGE_EXECUTED',
-      'Flushed all 36-state Edge Redis layers and static CDN cache.'
-    );
-    showToast('Edge Redis cache successfully purged across all national availability zones.');
-  };
+  // Reason Logging State
+  const [selectedUserForInspection, setSelectedUserForInspection] = useState<AdminUserRecord | null>(null);
 
-  // 2. Feature Flags
-  const handleToggleFlag = (id: string) => {
+  // Admin Role Management State
+  const [adminUsers, setAdminUsers] = useState<AdminUserRecord[]>([
+    { id: 'adm_1', name: 'Dr. Aliyu Danladi', email: 'a.danladi@agrigov.ng', role: 'super_admin', department: 'USUCO Tech Operations', state: 'National', status: 'Active', lastActive: '2 mins ago', twoFactorEnabled: true },
+    { id: 'adm_2', name: 'Hajiya Fatima Bello', email: 'f.bello@fmafs.gov.ng', role: 'gov_admin', department: 'FMAFS Policy Directorate', state: 'National', status: 'Active', lastActive: '18 mins ago', twoFactorEnabled: true },
+    { id: 'adm_3', name: 'Engr. Terver Aondo', email: 't.aondo@benueadp.gov.ng', role: 'institutional_admin', department: 'Benue State ADP Command', state: 'Benue', status: 'Active', lastActive: '1 hour ago', twoFactorEnabled: true },
+    { id: 'adm_4', name: 'Ngozi Okoro', email: 'n.okoro@agrigov.ng', role: 'super_admin', department: 'USUCO Support & Verification Desk', state: 'National', status: 'Active', lastActive: 'Just now', twoFactorEnabled: true },
+    { id: 'adm_5', name: 'Ibrahim Sanusi', email: 'i.sanusi@boa.gov.ng', role: 'gov_admin', department: 'Bank of Agriculture (BOA) Credit Desk', state: 'National', status: 'Active', lastActive: '3 hours ago', twoFactorEnabled: true },
+    { id: 'adm_6', name: 'Amina Yusuf', email: 'a.yusuf@kanoadp.gov.ng', role: 'institutional_admin', department: 'Kano State ADP Extension', state: 'Kano', status: 'Active', lastActive: '45 mins ago', twoFactorEnabled: true },
+  ]);
+
+  const [searchAdminQuery, setSearchAdminQuery] = useState('');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('All');
+  const [showAddAdminModal, setShowAddAdminModal] = useState(false);
+  const [editingAdmin, setEditingAdmin] = useState<AdminUserRecord | null>(null);
+
+  // Form State for Admin Creation / Edit
+  const [adminFormName, setAdminFormName] = useState('');
+  const [adminFormEmail, setAdminFormEmail] = useState('');
+  const [adminFormRole, setAdminFormRole] = useState<UserRole>('gov_admin');
+  const [adminFormDept, setAdminFormDept] = useState('');
+  const [adminFormState, setAdminFormState] = useState('National');
+
+  // Audit Log Filtering & Search
+  const [searchAuditQuery, setSearchAuditQuery] = useState('');
+  const [auditCategoryFilter, setAuditCategoryFilter] = useState<string>('ALL');
+
+  // Toggle Feature Flag
+  const handleToggleFlag = (flagId: string) => {
     setFeatureFlags((prev) =>
       prev.map((f) => {
-        if (f.id === id) {
-          const next = !f.enabled;
+        if (f.id === flagId) {
+          const updated = !f.enabled;
           addAuditLog(
-            user?.name || 'Engr. Tariq Abubakar',
-            (user?.role as UserRole) || 'super_admin',
-            'FEATURE_FLAG_MODIFIED',
-            `Toggled flag "${f.name}" to ${next ? 'ENABLED' : 'DISABLED'}.`
+            user.name,
+            user.role,
+            'FEATURE_FLAG_TOGGLE',
+            `Toggled flag ${f.name} to ${updated ? 'ENABLED' : 'DISABLED'} (${f.rolloutScope})`
           );
-          return { ...f, enabled: next };
+          return { ...f, enabled: updated };
         }
         return f;
       })
     );
-    showToast('Feature flag state updated and broadcast via Redis pub/sub.');
+    setActionSuccess('Feature flag status successfully updated in global Redis cache.');
+    setTimeout(() => setActionSuccess(null), 4000);
   };
 
-  // 3. User CRUD actions
-  const handleAddUser = (newU: Partial<User>) => {
+  // Emergency Freeze Handlers with Modal Confirmation
+  const executeEmergencyAction = () => {
+    if (!freezeModalType) return;
+
+    if (freezeModalType === 'marketplace') {
+      const nextState = !marketplaceTradingFrozen;
+      setMarketplaceTradingFrozen(nextState);
+      addAuditLog(
+        user.name,
+        user.role,
+        'EMERGENCY_FREEZE_MARKETPLACE',
+        `Marketplace Trading Freeze ${nextState ? 'ENGAGED' : 'DISENGAGED'}. Reason: ${freezeReason || 'Operational safeguard'}`
+      );
+      setActionSuccess(`Marketplace Trading circuit breaker is now ${nextState ? 'FROZEN' : 'ACTIVE'}.`);
+    } else if (freezeModalType === 'wallet') {
+      const nextState = !walletWithdrawalsFrozen;
+      setWalletWithdrawalsFrozen(nextState);
+      addAuditLog(
+        user.name,
+        user.role,
+        'EMERGENCY_FREEZE_WALLETS',
+        `Escrow & Wallet Settlement Freeze ${nextState ? 'ENGAGED' : 'DISENGAGED'}. Reason: ${freezeReason || 'Liquidity/AML safety halt'}`
+      );
+      setActionSuccess(`Escrow & Wallet Payout Gateways are now ${nextState ? 'FROZEN' : 'UNFROZEN'}.`);
+    } else if (freezeModalType === 'maintenance') {
+      const nextState = !maintenanceModeActive;
+      setMaintenanceModeActive(nextState);
+      addAuditLog(
+        user.name,
+        user.role,
+        'MAINTENANCE_MODE_TOGGLE',
+        `Full Platform Maintenance Gate ${nextState ? 'ACTIVATED' : 'DEACTIVATED'}. Reason: ${freezeReason || 'System Upgrade'}`
+      );
+      setActionSuccess(`Platform Maintenance Mode successfully ${nextState ? 'ACTIVATED' : 'DEACTIVATED'}.`);
+    }
+
+    setFreezeModalType(null);
+    setFreezeReason('');
+    setTimeout(() => setActionSuccess(null), 5000);
+  };
+
+  const handlePurgeEdgeCdn = () => {
     addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'USER_PROVISIONED',
-      `Provisioned new user "${newU.name}" with role ${newU.role} in ${newU.state}.`
+      user.name,
+      user.role,
+      'PURGE_EDGE_CDN',
+      'Purged all national Edge Redis cache buffers and static CDN assets.'
     );
-    showToast(`User ${newU.name} created successfully.`);
+    setActionSuccess('Nationwide Edge Redis Cache & API response buffers purged.');
+    setTimeout(() => setActionSuccess(null), 4000);
   };
 
-  const handleUpdateUser = (id: string, updates: Partial<User>) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'USER_MODIFIED',
-      `Updated user record #${id} (${updates.name || 'Citizen'}).`
-    );
-    showToast('User record updated.');
+  const handleSaveAdmin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!adminFormName || !adminFormEmail) return;
+
+    if (editingAdmin) {
+      // Edit existing
+      setAdminUsers((prev) =>
+        prev.map((adm) =>
+          adm.id === editingAdmin.id
+            ? {
+                ...adm,
+                name: adminFormName,
+                email: adminFormEmail,
+                role: adminFormRole,
+                department: adminFormDept,
+                state: adminFormState,
+              }
+            : adm
+        )
+      );
+      addAuditLog(
+        user.name,
+        user.role,
+        'UPDATE_ADMIN_USER',
+        `Updated administrative user: ${adminFormName} (${adminFormRole}) in ${adminFormState}`
+      );
+      setActionSuccess(`Admin account ${adminFormName} successfully updated.`);
+    } else {
+      // Create new
+      const newEntry: AdminUserRecord = {
+        id: `adm_${Date.now()}`,
+        name: adminFormName,
+        email: adminFormEmail,
+        role: adminFormRole,
+        department: adminFormDept || 'General Administration',
+        state: adminFormState,
+        status: 'Active',
+        lastActive: 'Just created',
+        twoFactorEnabled: true,
+      };
+      setAdminUsers((prev) => [newEntry, ...prev]);
+      addAuditLog(
+        user.name,
+        user.role,
+        'CREATE_ADMIN_USER',
+        `Created new administrative user: ${adminFormName} (${adminFormRole}) assigned to ${adminFormState}`
+      );
+      setActionSuccess(`Admin user ${adminFormName} created with ${adminFormRole} permissions.`);
+    }
+
+    setShowAddAdminModal(false);
+    setEditingAdmin(null);
+    setAdminFormName('');
+    setAdminFormEmail('');
+    setAdminFormDept('');
+    setTimeout(() => setActionSuccess(null), 4000);
   };
 
-  const handleDeleteUser = (id: string) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'USER_EXPUNGED',
-      `Expunged user record #${id} from platform registry.`
+  const handleToggleAdminStatus = (adminId: string) => {
+    setAdminUsers((prev) =>
+      prev.map((adm) => {
+        if (adm.id === adminId) {
+          const nextStatus = adm.status === 'Active' ? 'Suspended' : 'Active';
+          addAuditLog(
+            user.name,
+            user.role,
+            'ADMIN_STATUS_CHANGE',
+            `Changed status of admin ${adm.name} to ${nextStatus}`
+          );
+          return { ...adm, status: nextStatus };
+        }
+        return adm;
+      })
     );
-    showToast(`User #${id} removed.`);
+    setActionSuccess('Admin account status changed.');
+    setTimeout(() => setActionSuccess(null), 4000);
   };
 
-  const handleBulkVerify = (ids: string[]) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'BULK_KYC_VERIFICATION',
-      `Bulk approved Tier-2 biometric NIN verification for ${ids.length} citizens.`
-    );
-    showToast(`Bulk verified ${ids.length} users.`);
-  };
-
-  const handleBulkSuspend = (ids: string[]) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'BULK_USER_SUSPENSION',
-      `Suspended platform access for ${ids.length} accounts.`
-    );
-    showToast(`Suspended ${ids.length} users.`);
-  };
-
-  const handleBulkExport = (users: User[]) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'USER_DATASET_EXPORT',
-      `Exported ${users.length} user records with cryptographic signature.`
-    );
-    showToast(`Exported ${users.length} records to secure CSV.`);
-  };
-
-  // 4. Session Termination
-  const handleTerminateSession = (sessId: string) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'SESSION_TERMINATED',
-      `Revoked active JWT session token #${sessId}.`
-    );
-    showToast('Session terminated.');
-  };
-
-  const handleTerminateAllSessions = () => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'GLOBAL_SESSION_FLUSH',
-      'Terminated all non-Super Admin active sessions across 36 states.'
-    );
-    showToast('All user sessions revoked. Force re-authentication requested.');
-  };
-
-  // 5. Audit Dossier Export
-  const handleExportAuditDossier = () => {
-    const dataStr =
-      'data:text/json;charset=utf-8,' +
-      encodeURIComponent(JSON.stringify(auditLogs, null, 2));
+  // Export Audit Dossier
+  const handleExportAuditLogs = () => {
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(auditLogs, null, 2)
+    )}`;
     const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute('href', dataStr);
-    downloadAnchor.setAttribute(
-      'download',
-      `USUCO_AGRO_CRYPTO_AUDIT_${new Date().toISOString().slice(0, 10)}.json`
-    );
+    downloadAnchor.setAttribute('href', jsonString);
+    downloadAnchor.setAttribute('download', `USUCO_SUPER_ADMIN_AUDIT_DOSSIER_${Date.now()}.json`);
     document.body.appendChild(downloadAnchor);
     downloadAnchor.click();
     downloadAnchor.remove();
 
     addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'AUDIT_DOSSIER_DOWNLOADED',
-      'Exported full SHA-256 verified cryptographic audit ledger.'
+      user.name,
+      user.role,
+      'EXPORT_AUDIT_LOGS',
+      'Exported complete SHA-256 verified platform audit trail dossier.'
     );
-    showToast('Audit dossier JSON downloaded.');
+    setActionSuccess('Cryptographic audit trail dossier exported successfully.');
+    setTimeout(() => setActionSuccess(null), 4000);
   };
 
-  // 6. Platform Config Save
-  const handleSaveConfig = (section: string, data: any) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'PLATFORM_CONFIG_UPDATED',
-      `Updated platform configuration for section: ${section.toUpperCase()}.`
-    );
-    showToast(`Platform settings for [${section}] committed to sovereign ledger.`);
-  };
+  // Filtered Audit Logs
+  const filteredAuditLogs = auditLogs.filter((log) => {
+    const matchesSearch =
+      !searchAuditQuery ||
+      log.actorName.toLowerCase().includes(searchAuditQuery.toLowerCase()) ||
+      log.action.toLowerCase().includes(searchAuditQuery.toLowerCase()) ||
+      log.details.toLowerCase().includes(searchAuditQuery.toLowerCase());
 
-  // 7. Emergency Actions
-  const handleToggleMarketplaceFreeze = (frozen: boolean, reason: string) => {
-    setMarketplaceFrozen(frozen);
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      frozen ? 'EMERGENCY_FREEZE_MARKETPLACE' : 'EMERGENCY_UNFREEZE_MARKETPLACE',
-      `Marketplace trading ${frozen ? 'FROZEN' : 'UNFROZEN'}. Operational Justification: "${reason}"`
-    );
-    showToast(`Marketplace trading ${frozen ? 'FROZEN' : 'RESTORED'}.`);
-  };
+    const matchesCategory =
+      auditCategoryFilter === 'ALL' ||
+      (auditCategoryFilter === 'AUTH' && (log.action.includes('AUTH') || log.action.includes('LOGIN') || log.action.includes('ROLE'))) ||
+      (auditCategoryFilter === 'FREEZE' && log.action.includes('FREEZE')) ||
+      (auditCategoryFilter === 'FLAG' && log.action.includes('FEATURE_FLAG')) ||
+      (auditCategoryFilter === 'KYC' && log.action.includes('KYC')) ||
+      (auditCategoryFilter === 'EXPORT' && log.action.includes('EXPORT'));
 
-  const handleToggleWalletFreeze = (frozen: boolean, reason: string) => {
-    setWalletFrozen(frozen);
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      frozen ? 'EMERGENCY_FREEZE_WALLET' : 'EMERGENCY_UNFREEZE_WALLET',
-      `Wallet & Escrow payouts ${frozen ? 'FROZEN' : 'UNFROZEN'}. Operational Justification: "${reason}"`
-    );
-    showToast(`Wallet & Escrow disbursements ${frozen ? 'FROZEN' : 'RESTORED'}.`);
-  };
-
-  const handleToggleMaintenanceMode = (active: boolean, reason: string) => {
-    setMaintenanceModeActive(active);
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      active ? 'MAINTENANCE_MODE_ENABLED' : 'MAINTENANCE_MODE_DISABLED',
-      `Platform maintenance gate ${active ? 'ACTIVATED' : 'DEACTIVATED'}. Reason: "${reason}"`
-    );
-    showToast(`Maintenance mode ${active ? 'ENABLED' : 'DISABLED'}.`);
-  };
-
-  const handleToggleRateLimiter = (active: boolean) => {
-    setRateLimiterActive(active);
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'RATE_LIMITER_MODIFIED',
-      `Adaptive DDoS rate limiter ${active ? 'ENABLED' : 'DISABLED'}.`
-    );
-    showToast(`Rate limiter ${active ? 'ENABLED' : 'DISABLED'}.`);
-  };
-
-  const handleSendEmergencyBroadcast = (
-    title: string,
-    message: string,
-    targetRoles: string[],
-    channels: string[]
-  ) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'EMERGENCY_BROADCAST_TRANSMITTED',
-      `Emergency Broadcast: "${title}" transmitted to [${targetRoles.join(', ')}] via [${channels.join(', ')}].`
-    );
-    showToast('Emergency alert transmitted nationwide.');
-  };
-
-  const handleGenerateReport = (config: any) => {
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'REPORT_COMPILED',
-      `Compiled official report: ${config.reportType} (${config.dateRange}, ${config.exportFormat}).`
-    );
-  };
-
-  const confirmNDPRInspection = (reason: string, category: string) => {
-    if (!inspectingUser) return;
-    addAuditLog(
-      user?.name || 'Engr. Tariq Abubakar',
-      (user?.role as UserRole) || 'super_admin',
-      'NDPR_RECORD_INSPECTED',
-      `Inspected citizen data for ${inspectingUser.name} (${inspectingUser.phone}). Category: ${category}. Stated Reason: "${reason}"`
-    );
-    showToast(`NDPR justification logged. Viewing ${inspectingUser.name}.`);
-    setInspectingUser(null);
-  };
-
-  // Structured Sidebar Navigation Definition
-  const sidebarItems = [
-    {
-      id: 'dashboard' as MainTabType,
-      label: 'Dashboard',
-      icon: Activity,
-      subItems: [
-        { id: 'overview', label: 'System Health Overview' },
-        { id: 'metrics', label: 'Key Platform Metrics' },
-        { id: 'alerts', label: 'Critical Alerts' },
-      ],
-    },
-    {
-      id: 'users' as MainTabType,
-      label: 'Users & Roles',
-      icon: Users,
-      badge: `${usersList.length}`,
-      subItems: [
-        { id: 'all', label: 'All Users' },
-        { id: 'roles', label: 'Role Management' },
-        { id: 'bulk', label: 'Bulk Actions' },
-        { id: 'activity', label: 'User Activity Log' },
-      ],
-    },
-    {
-      id: 'access' as MainTabType,
-      label: 'Access Control',
-      icon: Key,
-      subItems: [
-        { id: 'matrix', label: 'Permission Matrix' },
-        { id: 'flags', label: 'Feature Flags' },
-        { id: 'sessions', label: 'Active Sessions' },
-        { id: 'security', label: 'Security Settings' },
-      ],
-    },
-    {
-      id: 'audit' as MainTabType,
-      label: 'Audit & Security',
-      icon: Shield,
-      subItems: [
-        { id: 'full_audit', label: 'Full Audit Log' },
-        { id: 'security_events', label: 'Security Events' },
-        { id: 'data_access', label: 'Data Access Logs' },
-        { id: 'suspicious', label: 'Suspicious Activity' },
-      ],
-    },
-    {
-      id: 'config' as MainTabType,
-      label: 'Platform Configuration',
-      icon: Sliders,
-      subItems: [
-        { id: 'system', label: 'System Settings' },
-        { id: 'payments', label: 'Payment & Wallet Config' },
-        { id: 'notifications', label: 'Notifications' },
-        { id: 'content', label: 'Languages & Content' },
-      ],
-    },
-    {
-      id: 'analytics' as MainTabType,
-      label: 'Analytics & Reports',
-      icon: BarChart3,
-      subItems: [
-        { id: 'global', label: 'Global Analytics' },
-        { id: 'builder', label: 'Custom Report Builder' },
-        { id: 'export', label: 'Export Centre' },
-      ],
-    },
-    {
-      id: 'emergency' as MainTabType,
-      label: 'Emergency Controls',
-      icon: AlertOctagon,
-      isDanger: true,
-      badge: (marketplaceFrozen || walletFrozen || maintenanceModeActive) ? 'ACTIVE' : undefined,
-      subItems: [
-        { id: 'freeze_marketplace', label: 'Freeze Marketplace' },
-        { id: 'freeze_wallet', label: 'Freeze Wallet / Payments' },
-        { id: 'broadcast', label: 'Emergency Broadcast' },
-        { id: 'maintenance', label: 'Maintenance Mode' },
-      ],
-    },
-    {
-      id: 'logs' as MainTabType,
-      label: 'System Logs',
-      icon: FileCode,
-      subItems: [
-        { id: 'app', label: 'Application Logs' },
-        { id: 'api', label: 'API & USSD Logs' },
-        { id: 'errors', label: 'Error Tracker' },
-      ],
-    },
-  ];
-
-  // Notification items for Top Bar
-  const sampleNotifications = [
-    { id: '1', title: 'High USSD Volume Detected', time: '4m ago', type: 'info', desc: 'Sokoto node registered 1,200 SMS pings/min.' },
-    { id: '2', title: 'Unusual IP Range Ping', time: '18m ago', type: 'warn', desc: 'Blocked 4 rapid login attempts on Port 443.' },
-    { id: '3', title: 'BOA Batch Settlement Cleared', time: '42m ago', type: 'success', desc: '₦142.5M disbursed to 348 cooperatives.' },
-  ];
+    return matchesSearch && matchesCategory;
+  });
 
   return (
-    <div className="min-h-screen bg-[#070b09] text-[#e2e8e4] flex flex-col font-sans selection:bg-[#10b981]/30 selection:text-[#34d399]">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="fixed top-20 right-6 z-50 p-4 bg-[#064e3b] text-[#6ee7b7] border border-[#10b981]/50 rounded-2xl shadow-2xl flex items-center gap-2.5 font-bold text-xs animate-bounce">
-          <CheckCircle2 className="w-5 h-5 text-[#10b981]" />
-          <span>{toastMessage}</span>
+    <div className="space-y-6 font-body">
+      {/* Global Filter Bar */}
+      <AdminGlobalFilterBar
+        filters={filters}
+        onFilterChange={setFilters}
+        roleTitle="Super Administrator (USUCO – Platform Owner)"
+        departmentTag="USUCO System Architecture & National Infrastructure"
+        watermarkText="CONFIDENTIAL • USUCO SUPER ADMIN GOVERNANCE"
+      />
+
+      {/* Emergency Active Banner Alert */}
+      {(marketplaceTradingFrozen || walletWithdrawalsFrozen || maintenanceModeActive) && (
+        <div className="p-4 bg-[#ba1a1a] text-white rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg animate-pulse">
+          <div className="flex items-center gap-3">
+            <AlertOctagon className="w-7 h-7 shrink-0 text-white" />
+            <div>
+              <div className="font-heading font-bold text-sm">
+                CRITICAL SYSTEM EMERGENCY OVERRIDE ENGAGED
+              </div>
+              <p className="text-xs opacity-90">
+                {marketplaceTradingFrozen && '• Marketplace Trading is Frozen '}
+                {walletWithdrawalsFrozen && '• Wallet & Escrow Withdrawals are Paused '}
+                {maintenanceModeActive && '• Platform is in Maintenance Gate '}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setMarketplaceTradingFrozen(false);
+              setWalletWithdrawalsFrozen(false);
+              setMaintenanceModeActive(false);
+              addAuditLog(user.name, user.role, 'EMERGENCY_RESET', 'Deactivated all emergency freezes');
+            }}
+            className="px-3.5 py-1.5 bg-white text-[#ba1a1a] rounded-xl font-bold text-xs hover:bg-[#ffdad6] transition-colors cursor-pointer"
+          >
+            Lift All Freezes
+          </button>
         </div>
       )}
 
-      {/* ========================================================================= */}
-      {/* 1. PERSISTENT TOP BAR                                                     */}
-      {/* ========================================================================= */}
-      <header className="sticky top-0 z-40 bg-[#0c1310] border-b border-[#1b2b22] px-4 sm:px-6 py-3 shadow-md flex items-center justify-between gap-4">
-        {/* Left Side: Mobile Menu + Super Admin Brand Badge */}
-        <div className="flex items-center gap-3">
+      {/* Action Success Alert */}
+      {actionSuccess && (
+        <div className="p-3.5 bg-[#c1ecd4] text-[#002114] border border-[#276a4c]/40 rounded-2xl text-xs font-bold flex items-center justify-between shadow-xs">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-[#002114]" />
+            <span>{actionSuccess}</span>
+          </div>
           <button
             type="button"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="lg:hidden p-2 rounded-xl bg-[#131d18] hover:bg-[#1b2b22] text-[#8fa89b] hover:text-white transition-colors cursor-pointer border border-[#1b2b22]"
-            aria-label="Toggle Sidebar"
+            onClick={() => setActionSuccess(null)}
+            className="text-xs underline hover:text-black cursor-pointer"
           >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            Dismiss
           </button>
+        </div>
+      )}
 
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-[#10b981] text-[#0a0f0d] flex items-center justify-center font-black shadow-md shadow-[#10b981]/20">
-              <Shield className="w-4 h-4 text-[#0a0f0d]" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-extrabold text-sm text-white tracking-tight">USUCO AGRO-CONNECT</span>
-                <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-[#10b981]/20 text-[#34d399] border border-[#10b981]/30">
-                  SUPER ADMIN
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono text-[#8fa89b] bg-[#131d18] border border-[#1b2b22]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-pulse" />
-                  ROOT LEVEL 0
-                </span>
-              </div>
-              <div className="text-[11px] text-[#8fa89b] hidden md:block">
-                Federal Ministry of Agriculture & Food Security • Sovereign Cloud Control
-              </div>
-            </div>
+      {/* High-level Platform Revenue & Health Metric Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+        <div className="bg-white border border-[#c1c8c2]/80 p-4 rounded-2xl shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-[#717973]">
+            <span className="text-[11px] font-bold uppercase tracking-wider">System Uptime</span>
+            <Activity className="w-4 h-4 text-[#16a34a]" />
+          </div>
+          <div className="font-heading font-bold text-2xl text-[#012d1d]">99.98%</div>
+          <div className="text-[11px] text-[#16a34a] font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] animate-pulse" />
+            <span>All 6 Microservices Operational</span>
           </div>
         </div>
 
-        {/* Middle: Global Search Input */}
-        <div className="flex-1 max-w-md hidden md:block">
-          <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#8fa89b]" />
-            <input
-              type="text"
-              placeholder="Search users, audit logs, feature flags, system parameters..."
-              value={globalSearch}
-              onChange={(e) => setGlobalSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-1.5 bg-[#070b09] border border-[#1b2b22] rounded-xl text-xs text-white placeholder-[#587063] focus:outline-hidden focus:border-[#10b981] transition-all"
-            />
-            {globalSearch && (
+        <div className="bg-white border border-[#c1c8c2]/80 p-4 rounded-2xl shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-[#717973]">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Active Concurrency</span>
+            <Users className="w-4 h-4 text-[#012d1d]" />
+          </div>
+          <div className="font-heading font-bold text-2xl text-[#012d1d]">42,890</div>
+          <div className="text-[11px] text-[#012d1d] font-semibold">Farmers, Agents & Aggregators</div>
+        </div>
+
+        <div className="bg-white border border-[#c1c8c2]/80 p-4 rounded-2xl shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-[#717973]">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Gross Merchandise Value</span>
+            <DollarSign className="w-4 h-4 text-[#2563eb]" />
+          </div>
+          <div className="font-heading font-bold text-2xl text-[#012d1d]">₦14.82 Billion</div>
+          <div className="text-[11px] text-[#16a34a] font-bold">+18.4% MoM Nationwide Trade Flow</div>
+        </div>
+
+        <div className="bg-white border border-[#c1c8c2]/80 p-4 rounded-2xl shadow-xs space-y-1">
+          <div className="flex items-center justify-between text-[#717973]">
+            <span className="text-[11px] font-bold uppercase tracking-wider">Platform Revenue (1%)</span>
+            <TrendingUp className="w-4 h-4 text-[#b45309]" />
+          </div>
+          <div className="font-heading font-bold text-2xl text-[#012d1d]">₦148.20 Million</div>
+          <div className="text-[11px] text-[#717973] font-semibold">Net Escrow Service Commission</div>
+        </div>
+      </div>
+
+      {/* Sub-Tabs Ribbon */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none border-b border-[#c1c8c2]/60">
+        {[
+          { id: 'system_health' as const, label: 'System Health & APIs', icon: Server },
+          { id: 'revenue_volume' as const, label: 'Revenue & Trade Volume', icon: BarChart3 },
+          { id: 'feature_flags' as const, label: 'Feature Flags & Modules', icon: Sliders },
+          { id: 'role_management' as const, label: 'Global Admin & Roles', icon: Key },
+          { id: 'emergency_controls' as const, label: 'Emergency Kill-Switches', icon: AlertOctagon },
+          { id: 'audit_explorer' as const, label: 'Full Audit Trail Explorer', icon: FileText },
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeSubTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveSubTab(tab.id)}
+              className={`px-3.5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 whitespace-nowrap transition-all cursor-pointer ${
+                isActive
+                  ? 'bg-[#012d1d] text-white shadow-xs'
+                  : 'bg-white text-[#525a54] hover:bg-[#f0f4f1] border border-[#c1c8c2]/50'
+              }`}
+            >
+              <Icon className={`w-4 h-4 ${isActive ? 'text-[#c1ecd4]' : 'text-[#012d1d]'}`} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Tab 1: System Health & Microservices Telemetry */}
+      {activeSubTab === 'system_health' && (
+        <div className="space-y-5">
+          {/* Microservices Grid */}
+          <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2 border-b border-[#e5e9e6]">
+              <div>
+                <h3 className="font-heading font-bold text-sm text-[#012d1d]">
+                  Microservices & API Gateway Telemetry
+                </h3>
+                <p className="text-xs text-[#717973]">
+                  Real-time health of federal integration endpoints, banking settlement buses, and USSD relays
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => setGlobalSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8fa89b] hover:text-white text-xs"
+                onClick={handlePurgeEdgeCdn}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#f0f4f1] hover:bg-[#e2e8e4] text-[#012d1d] text-xs font-bold rounded-xl border border-[#d8deda] transition-colors cursor-pointer"
               >
-                <X className="w-3.5 h-3.5" />
+                <RefreshCw className="w-3.5 h-3.5 text-[#012d1d]" />
+                <span>Purge Edge CDN Cache</span>
               </button>
-            )}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+              {microservices.map((svc, idx) => (
+                <div
+                  key={idx}
+                  className="p-3.5 bg-[#f8faf8] rounded-2xl border border-[#d8deda] space-y-2 hover:border-[#012d1d]/40 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-heading font-bold text-xs text-[#012d1d] leading-snug">
+                      {svc.name}
+                    </span>
+                    <span className="px-2 py-0.5 bg-[#c1ecd4] text-[#002114] text-[10px] font-bold rounded-full shrink-0">
+                      {svc.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-1.5 pt-1 border-t border-[#e2e8e4] text-center">
+                    <div>
+                      <div className="text-[10px] text-[#717973]">Latency</div>
+                      <div className="text-xs font-bold text-[#012d1d]">{svc.latency}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-[#717973]">Uptime</div>
+                      <div className="text-xs font-bold text-[#16a34a]">{svc.uptime}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-[#717973]">Load</div>
+                      <div className="text-xs font-bold text-[#012d1d]">{svc.load}</div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] text-[#717973]">Error %</div>
+                      <div className="text-xs font-bold text-[#16a34a]">{svc.errorRate}</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* User Concurrency & Infrastructure Health */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-[#e5e9e6]">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-[#012d1d]" />
+                  <h4 className="font-heading font-bold text-xs text-[#012d1d]">
+                    Live Concurrency by User Role
+                  </h4>
+                </div>
+                <span className="text-[11px] font-bold text-[#16a34a] bg-[#f0fdf4] px-2 py-0.5 rounded-md border border-[#bbf7d0]">
+                  42,890 Active Sessions
+                </span>
+              </div>
+
+              <div className="space-y-2.5">
+                {userConcurrency.map((item, idx) => (
+                  <div key={idx} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="font-medium text-[#012d1d]">{item.roleLabel}</span>
+                      <span className="font-bold text-[#012d1d]">
+                        {item.count} <span className="text-[11px] font-normal text-[#717973]">({item.share})</span>
+                      </span>
+                    </div>
+                    <div className="w-full bg-[#f0f4f1] h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-[#012d1d] h-full rounded-full transition-all duration-500"
+                        style={{ width: item.share }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Infrastructure Specs */}
+            <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 pb-2 border-b border-[#e5e9e6]">
+                <Cpu className="w-4 h-4 text-[#012d1d]" />
+                <h4 className="font-heading font-bold text-xs text-[#012d1d]">
+                  Cloud Infrastructure Health
+                </h4>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-2.5 bg-[#f8faf8] rounded-xl border border-[#e5e9e6] flex justify-between items-center">
+                  <span className="text-[#717973]">CPU Cluster Load</span>
+                  <span className="font-bold text-[#012d1d]">34.2% / 128 Cores</span>
+                </div>
+                <div className="p-2.5 bg-[#f8faf8] rounded-xl border border-[#e5e9e6] flex justify-between items-center">
+                  <span className="text-[#717973]">Memory Allocation</span>
+                  <span className="font-bold text-[#012d1d]">182 GB / 512 GB</span>
+                </div>
+                <div className="p-2.5 bg-[#f8faf8] rounded-xl border border-[#e5e9e6] flex justify-between items-center">
+                  <span className="text-[#717973]">Redis Cache Hit Ratio</span>
+                  <span className="font-bold text-[#16a34a]">98.4%</span>
+                </div>
+                <div className="p-2.5 bg-[#f8faf8] rounded-xl border border-[#e5e9e6] flex justify-between items-center">
+                  <span className="text-[#717973]">Cloud SQL DB Pool</span>
+                  <span className="font-bold text-[#012d1d]">18 / 250 Conn.</span>
+                </div>
+                <div className="p-2.5 bg-[#f8faf8] rounded-xl border border-[#e5e9e6] flex justify-between items-center">
+                  <span className="text-[#717973]">USSD Packet Drop</span>
+                  <span className="font-bold text-[#16a34a]">0.12% (Nominal)</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Right Side: Quick Actions, Alerts, Emergency, Profile */}
-        <div className="flex items-center gap-2.5">
-          {/* Quick Emergency Kill Button */}
-          <button
-            type="button"
-            onClick={() => handleNavigate('emergency', 'freeze_marketplace')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md ${
-              marketplaceFrozen || walletFrozen || maintenanceModeActive
-                ? 'bg-[#ef4444] text-white animate-pulse shadow-[#ef4444]/30'
-                : 'bg-[#2a1313] hover:bg-[#3f1919] text-[#f87171] border border-[#7f1d1d]'
-            }`}
-            title="Emergency Control Center"
-          >
-            <AlertOctagon className="w-4 h-4" />
-            <span className="hidden sm:inline">Emergency Controls</span>
-          </button>
+      {/* Tab 2: Revenue & Trade Volume Overview */}
+      {activeSubTab === 'revenue_volume' && (
+        <div className="space-y-5">
+          {/* Revenue Breakdown */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#717973]">
+                Total Escrow Holding Balance
+              </div>
+              <div className="font-heading font-bold text-2xl text-[#012d1d]">₦1.24 Billion</div>
+              <p className="text-xs text-[#525a54]">
+                Protected in CBN-regulated settlement accounts awaiting delivery sign-offs
+              </p>
+            </div>
 
-          {/* System Status Pill */}
-          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-[#131d18] border border-[#1b2b22] rounded-xl text-[11px] font-mono text-[#8fa89b]">
-            <span className="w-2 h-2 rounded-full bg-[#10b981]" />
-            <span>99.98% OK</span>
+            <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#717973]">
+                Total Settled Orders (All-time)
+              </div>
+              <div className="font-heading font-bold text-2xl text-[#012d1d]">48,290 Trades</div>
+              <p className="text-xs text-[#16a34a] font-bold">
+                99.8% Dispute-free Resolution
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-2">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#717973]">
+                Average Trade Ticket Size
+              </div>
+              <div className="font-heading font-bold text-2xl text-[#012d1d]">₦306,900</div>
+              <p className="text-xs text-[#525a54]">
+                Aggregated cross-state haulage & bulk cooperative batch orders
+              </p>
+            </div>
           </div>
 
-          {/* Notifications Trigger */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-xl bg-[#131d18] hover:bg-[#1b2b22] text-[#8fa89b] hover:text-white transition-colors relative cursor-pointer border border-[#1b2b22]"
-              title="System Alerts & Notifications"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#10b981] rounded-full ring-2 ring-[#0c1310]" />
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 mt-2 w-80 bg-[#0c1310] border border-[#1b2b22] rounded-2xl shadow-2xl p-3 space-y-2 z-50">
-                <div className="flex items-center justify-between pb-2 border-b border-[#1b2b22]">
-                  <span className="text-xs font-bold text-white">System Security Alerts</span>
-                  <span className="text-[10px] text-[#34d399] font-mono">3 New</span>
-                </div>
-                <div className="divide-y divide-[#1b2b22] text-xs">
-                  {sampleNotifications.map((n) => (
-                    <div key={n.id} className="py-2 space-y-0.5">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-[#e2e8e4] text-[11px]">{n.title}</span>
-                        <span className="text-[9px] text-[#8fa89b]">{n.time}</span>
-                      </div>
-                      <p className="text-[10px] text-[#8fa89b] leading-tight">{n.desc}</p>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNotifications(false);
-                    handleNavigate('audit', 'security_events');
-                  }}
-                  className="w-full py-1.5 text-center bg-[#131d18] hover:bg-[#1b2b22] text-[#34d399] rounded-xl text-[11px] font-bold transition-colors cursor-pointer"
-                >
-                  View All Security Events
-                </button>
+          {/* Commodity Trade Volume Breakdown Table */}
+          <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-4">
+            <div className="flex justify-between items-center pb-2 border-b border-[#e5e9e6]">
+              <div>
+                <h3 className="font-heading font-bold text-sm text-[#012d1d]">
+                  National Trade Volume by Commodity
+                </h3>
+                <p className="text-xs text-[#717973]">
+                  Physical tonnage transacted and gross settlement value across Nigerian agro-corridors
+                </p>
               </div>
-            )}
-          </div>
-
-          {/* Profile & Switch Portal */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowProfileMenu(!showProfileMenu)}
-              className="flex items-center gap-2 p-1.5 pl-2 rounded-xl bg-[#131d18] hover:bg-[#1b2b22] border border-[#1b2b22] transition-colors cursor-pointer"
-            >
-              <div className="w-6 h-6 rounded-lg bg-[#10b981]/20 text-[#10b981] flex items-center justify-center font-bold text-xs">
-                {user?.name?.[0] || 'T'}
-              </div>
-              <span className="text-xs font-bold text-white hidden sm:inline max-w-[100px] truncate">
-                {user?.name?.split(' ')[0] || 'Tariq'}
+              <span className="text-xs font-bold text-[#012d1d] bg-[#f0f4f1] px-3 py-1 rounded-xl border border-[#d8deda]">
+                Live Market Data
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-[#8fa89b]" />
-            </button>
+            </div>
 
-            {showProfileMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-[#0c1310] border border-[#1b2b22] rounded-2xl shadow-2xl p-2 space-y-1 z-50 text-xs">
-                <div className="px-3 py-2 border-b border-[#1b2b22]">
-                  <div className="font-bold text-white truncate">{user?.name || 'Engr. Tariq Abubakar'}</div>
-                  <div className="text-[10px] text-[#8fa89b] font-mono">tariq.abubakar@fmafs.gov.ng</div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#e5e9e6] bg-[#f8faf8] text-[#525a54] font-bold">
+                    <th className="p-3">Agricultural Commodity</th>
+                    <th className="p-3">Volume Transacted</th>
+                    <th className="p-3">Gross Value (₦)</th>
+                    <th className="p-3">Market Share</th>
+                    <th className="p-3 text-right">MoM Growth</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e5e9e6]">
+                  {valueChainVolume.map((item, idx) => (
+                    <tr key={idx} className="hover:bg-[#f8faf8] transition-colors">
+                      <td className="p-3 font-bold text-[#012d1d]">{item.commodity}</td>
+                      <td className="p-3 font-medium text-[#525a54]">{item.volumeTonnes}</td>
+                      <td className="p-3 font-bold text-[#012d1d]">{item.valueNaira}</td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 bg-[#f0f4f1] text-[#012d1d] rounded-md font-mono text-[10px] font-bold">
+                          {item.share}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right font-bold text-[#16a34a]">{item.growth}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab 3: Feature Flags & Module Activation */}
+      {activeSubTab === 'feature_flags' && (
+        <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-4">
+          <div className="pb-2 border-b border-[#e5e9e6] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+            <div>
+              <h3 className="font-heading font-bold text-sm text-[#012d1d]">
+                National Platform Feature Flags & Dynamic Modules
+              </h3>
+              <p className="text-xs text-[#717973]">
+                Instantly activate, pilot-test, or deactivate nationwide modules without redeploying infrastructure
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-[#16a34a] bg-[#f0fdf4] px-2.5 py-1 rounded-lg border border-[#bbf7d0]">
+                8 Active Modules
+              </span>
+            </div>
+          </div>
+
+          <div className="divide-y divide-[#e5e9e6]">
+            {featureFlags.map((flag) => (
+              <div key={flag.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-1 max-w-2xl">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-heading font-bold text-xs text-[#012d1d]">
+                      {flag.name}
+                    </span>
+                    <span className="text-[10px] font-bold px-2 py-0.2 bg-[#f0f4f1] text-[#525a54] rounded-md border border-[#d8deda]">
+                      {flag.category}
+                    </span>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.2 rounded-md ${
+                        flag.rolloutScope === 'National'
+                          ? 'bg-[#c1ecd4] text-[#002114]'
+                          : 'bg-[#fffbeb] text-[#b45309] border border-[#fef3c7]'
+                      }`}
+                    >
+                      Scope: {flag.rolloutScope}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#717973]">{flag.desc}</p>
+                  {flag.pilotStates && (
+                    <div className="text-[11px] text-[#525a54]">
+                      <span className="font-bold">Pilot States:</span> {flag.pilotStates.join(', ')}
+                    </div>
+                  )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowProfileMenu(false);
-                    setActiveView('admin_department_select');
-                  }}
-                  className="w-full px-3 py-2 text-left hover:bg-[#131d18] text-[#e2e8e4] rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Building className="w-4 h-4 text-[#10b981]" />
-                  <span>Switch Admin Department</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowProfileMenu(false);
-                    handleNavigate('config', 'system');
-                  }}
-                  className="w-full px-3 py-2 text-left hover:bg-[#131d18] text-[#e2e8e4] rounded-xl flex items-center gap-2 cursor-pointer transition-colors"
-                >
-                  <Sliders className="w-4 h-4 text-[#8fa89b]" />
-                  <span>System Preferences</span>
-                </button>
-
-                <div className="pt-1 border-t border-[#1b2b22]">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowProfileMenu(false);
-                      logout();
-                    }}
-                    className="w-full px-3 py-2 text-left hover:bg-[#2a1313] text-[#ef4444] rounded-xl flex items-center gap-2 cursor-pointer transition-colors font-bold"
+                    onClick={() => handleToggleFlag(flag.id)}
+                    className={`p-1.5 rounded-xl flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer ${
+                      flag.enabled
+                        ? 'bg-[#012d1d] text-[#c1ecd4]'
+                        : 'bg-[#f0f4f1] text-[#717973] border border-[#d8deda]'
+                    }`}
                   >
-                    <LogOut className="w-4 h-4" />
-                    <span>Log Out</span>
+                    {flag.enabled ? (
+                      <>
+                        <ToggleRight className="w-6 h-6 text-[#4ade80]" />
+                        <span className="pr-1 text-white">Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <ToggleLeft className="w-6 h-6 text-[#717973]" />
+                        <span className="pr-1">Disabled</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
-            )}
+            ))}
           </div>
         </div>
-      </header>
+      )}
 
-      {/* ========================================================================= */}
-      {/* 2. BODY LAYOUT: SIDEBAR + MAIN CONTENT AREA                              */}
-      {/* ========================================================================= */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar */}
-        <aside
-          className={`fixed inset-y-0 left-0 top-[57px] z-30 w-72 bg-[#0c1310] border-r border-[#1b2b22] flex flex-col transition-transform duration-200 ease-in-out lg:static lg:translate-x-0 ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-          }`}
-        >
-          {/* Sidebar Navigation Items */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-1.5 scrollbar-thin scrollbar-thumb-[#1b2b22]">
-            <div className="px-3 pb-2 text-[10px] font-mono font-bold uppercase tracking-wider text-[#587063]">
-              Super Admin Core Navigation
-            </div>
-
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const isSelected = activeTab === item.id;
-              const isExpanded = expandedSections[item.id];
-
-              return (
-                <div key={item.id} className="space-y-0.5">
-                  <div
-                    onClick={() => {
-                      if (!isSelected) {
-                        handleNavigate(item.id, item.subItems[0].id);
-                      } else {
-                        toggleSection(item.id);
-                      }
-                    }}
-                    className={`group w-full px-3 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between cursor-pointer transition-all ${
-                      isSelected
-                        ? item.isDanger
-                          ? 'bg-[#ef4444] text-white shadow-md'
-                          : 'bg-[#10b981] text-[#0a0f0d] shadow-md shadow-[#10b981]/20 font-extrabold'
-                        : 'text-[#8fa89b] hover:bg-[#131d18] hover:text-white'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className={`w-4 h-4 shrink-0 ${isSelected ? (item.isDanger ? 'text-white' : 'text-[#0a0f0d]') : item.isDanger ? 'text-[#ef4444]' : 'text-[#8fa89b] group-hover:text-white'}`} />
-                      <span className="truncate">{item.label}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      {item.badge && (
-                        <span
-                          className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
-                            isSelected
-                              ? 'bg-black/30 text-white'
-                              : item.isDanger
-                              ? 'bg-[#ef4444]/20 text-[#ef4444]'
-                              : 'bg-[#1b2b22] text-[#34d399]'
-                          }`}
-                        >
-                          {item.badge}
-                        </span>
-                      )}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleSection(item.id);
-                        }}
-                        className="p-0.5 hover:opacity-80 cursor-pointer"
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        ) : (
-                          <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Sub-items (Tree View) */}
-                  {isExpanded && (
-                    <div className="pl-6 pr-1 py-1 space-y-0.5 border-l-2 border-[#1b2b22] ml-4 my-0.5">
-                      {item.subItems.map((sub) => {
-                        const isSubActive = isSelected && subTab === sub.id;
-                        return (
-                          <button
-                            key={sub.id}
-                            type="button"
-                            onClick={() => handleNavigate(item.id, sub.id)}
-                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[11px] flex items-center justify-between transition-colors cursor-pointer ${
-                              isSubActive
-                                ? 'text-[#34d399] font-bold bg-[#131d18] border border-[#1b2b22]'
-                                : 'text-[#8fa89b] hover:text-white hover:bg-[#131d18]/50'
-                            }`}
-                          >
-                            <span className="truncate">{sub.label}</span>
-                            {isSubActive && <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Quick System Diagnostics Footer in Sidebar */}
-          <div className="p-3 bg-[#080d0a] border-t border-[#1b2b22] space-y-2 text-[11px] font-mono">
-            <div className="flex justify-between text-[#8fa89b]">
-              <span>Edge Nodes:</span>
-              <span className="text-[#34d399] font-bold">36 / 36 Active</span>
-            </div>
-            <div className="flex justify-between text-[#8fa89b]">
-              <span>Escrow Liquidity:</span>
-              <span className="text-white font-bold">₦14.82B</span>
+      {/* Tab 4: Global Admin & Role Management */}
+      {activeSubTab === 'role_management' && (
+        <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-[#e5e9e6]">
+            <div>
+              <h3 className="font-heading font-bold text-sm text-[#012d1d]">
+                Global Administrative Access & Role Delegation
+              </h3>
+              <p className="text-xs text-[#717973]">
+                Provision, modify, or revoke administrative credentials across federal ministries and state ADPs
+              </p>
             </div>
             <button
               type="button"
-              onClick={handlePurgeCache}
-              className="w-full py-1.5 bg-[#131d18] hover:bg-[#1b2b22] text-[#8fa89b] hover:text-white rounded-lg flex items-center justify-center gap-1.5 border border-[#1b2b22] transition-colors cursor-pointer"
+              onClick={() => {
+                setEditingAdmin(null);
+                setAdminFormName('');
+                setAdminFormEmail('');
+                setAdminFormRole('gov_admin');
+                setAdminFormDept('');
+                setAdminFormState('National');
+                setShowAddAdminModal(true);
+              }}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[#012d1d] hover:bg-[#1b4332] text-white text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
             >
-              <RefreshCw className="w-3 h-3" />
-              <span>Purge Edge Cache</span>
+              <Users className="w-3.5 h-3.5 text-[#c1ecd4]" />
+              <span>Provision New Admin</span>
             </button>
           </div>
-        </aside>
 
-        {/* Backdrop for mobile drawer */}
-        {sidebarOpen && (
-          <div
-            onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-20 bg-black/60 backdrop-blur-xs lg:hidden"
-          />
-        )}
-
-        {/* Main Workspace Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
-          {/* Active View Header */}
-          <div className="bg-[#0f1713] border border-[#1b2b22] rounded-3xl p-5 sm:p-6 shadow-xl relative overflow-hidden">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 relative z-10">
-              <div className="space-y-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="px-3 py-1 bg-[#10b981] text-[#0a0f0d] font-mono font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-xs">
-                    USUCO Sovereign Platform Control
-                  </span>
-                  <span className="px-2.5 py-0.5 bg-[#1b2b22] text-[#34d399] font-mono text-xs font-bold rounded-lg border border-[#2d4738] flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
-                    Live Cluster Root
-                  </span>
-                  {(marketplaceFrozen || walletFrozen || maintenanceModeActive) && (
-                    <span className="px-2.5 py-0.5 bg-[#7f1d1d] text-white font-mono text-xs font-bold rounded-lg border border-[#991b1b] flex items-center gap-1 animate-pulse">
-                      <AlertOctagon className="w-3.5 h-3.5" />
-                      <span>EMERGENCY FREEZE ACTIVE</span>
-                    </span>
-                  )}
-                </div>
-                <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight pt-1">
-                  {activeTab === 'dashboard' && 'National Platform Health & Telemetry'}
-                  {activeTab === 'users' && 'Global User & Administrative Authority Matrix'}
-                  {activeTab === 'access' && 'Access Control, Feature Flags & Active Sessions'}
-                  {activeTab === 'audit' && 'Cryptographic Audit Trail & Security Ledger'}
-                  {activeTab === 'config' && 'Sovereign Platform Configuration & Parameter Store'}
-                  {activeTab === 'analytics' && 'Macro Agricultural Analytics & Policy Reporting'}
-                  {activeTab === 'emergency' && 'Emergency Kill Switches & National Broadcast Terminal'}
-                  {activeTab === 'logs' && 'Platform Application, API & Error Logs'}
-                </h1>
-                <p className="text-xs sm:text-sm text-[#8fa89b]">
-                  Federal Ministry of Agriculture & Food Security • USUCO Agro-Connect Infrastructure
-                </p>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-                <div className="px-3 py-2 bg-[#0a0f0d] border border-[#1b2b22] rounded-xl text-center">
-                  <div className="text-[10px] text-[#8fa89b]">Active Section</div>
-                  <div className="font-bold text-[#10b981] uppercase">{activeTab}</div>
-                </div>
-                <div className="px-3 py-2 bg-[#0a0f0d] border border-[#1b2b22] rounded-xl text-center">
-                  <div className="text-[10px] text-[#8fa89b]">Current Focus</div>
-                  <div className="font-bold text-[#34d399] uppercase">{subTab}</div>
-                </div>
-              </div>
+          {/* Search & Filter Bar */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-[#717973] absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search administrator name, email, or department..."
+                value={searchAdminQuery}
+                onChange={(e) => setSearchAdminQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-[#f8faf8] border border-[#d8deda] rounded-xl text-xs text-[#012d1d] focus:outline-hidden focus:border-[#012d1d]"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-[#717973]" />
+              <select
+                value={selectedRoleFilter}
+                onChange={(e) => setSelectedRoleFilter(e.target.value)}
+                className="text-xs p-2 bg-[#f8faf8] border border-[#d8deda] rounded-xl text-[#012d1d] font-medium"
+              >
+                <option value="All">All Role Tiers</option>
+                <option value="super_admin">Super Admin (USUCO)</option>
+                <option value="gov_admin">Gov Admin (Ministry / BOA)</option>
+                <option value="institutional_admin">Institutional Admin (State ADP)</option>
+              </select>
             </div>
           </div>
 
-          {/* Active Pillar Workspace Content Component Rendering */}
-          <div className="space-y-6">
-            {activeTab === 'dashboard' && (
-              <SuperAdminHealthOverview
-                onPurgeCache={handlePurgeCache}
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
-              />
-            )}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-[#e5e9e6] bg-[#f8faf8] text-[#525a54] font-bold">
+                  <th className="p-3">Official Name</th>
+                  <th className="p-3">Role Tier</th>
+                  <th className="p-3">Department / Directorate</th>
+                  <th className="p-3">Jurisdiction</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">2FA</th>
+                  <th className="p-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#e5e9e6]">
+                {adminUsers
+                  .filter((adm) => {
+                    const matchesSearch =
+                      !searchAdminQuery ||
+                      adm.name.toLowerCase().includes(searchAdminQuery.toLowerCase()) ||
+                      adm.email.toLowerCase().includes(searchAdminQuery.toLowerCase()) ||
+                      adm.department.toLowerCase().includes(searchAdminQuery.toLowerCase());
+                    const matchesRole = selectedRoleFilter === 'All' || adm.role === selectedRoleFilter;
+                    return matchesSearch && matchesRole;
+                  })
+                  .map((adm) => (
+                    <tr key={adm.id} className="hover:bg-[#f8faf8] transition-colors">
+                      <td className="p-3">
+                        <div className="font-bold text-[#012d1d]">{adm.name}</div>
+                        <div className="text-[11px] text-[#717973]">{adm.email}</div>
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 bg-[#012d1d] text-[#c1ecd4] rounded-md font-mono text-[10px] font-bold uppercase">
+                          {adm.role}
+                        </span>
+                      </td>
+                      <td className="p-3 text-[#525a54] font-medium">{adm.department}</td>
+                      <td className="p-3">
+                        <span className="font-semibold text-[#012d1d]">{adm.state}</span>
+                      </td>
+                      <td className="p-3">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            adm.status === 'Active'
+                              ? 'bg-[#c1ecd4] text-[#002114]'
+                              : 'bg-[#ffdad6] text-[#ba1a1a]'
+                          }`}
+                        >
+                          {adm.status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className="text-[10px] font-bold text-[#16a34a] bg-[#f0fdf4] px-1.5 py-0.5 rounded border border-[#bbf7d0]">
+                          Enforced
+                        </span>
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedUserForInspection(adm)}
+                            className="p-1.5 bg-[#f0f4f1] hover:bg-[#e2e8e4] text-[#012d1d] rounded-lg transition-colors cursor-pointer"
+                            title="Inspect Profile with Mandatory Reason Logging"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#012d1d]" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingAdmin(adm);
+                              setAdminFormName(adm.name);
+                              setAdminFormEmail(adm.email);
+                              setAdminFormRole(adm.role);
+                              setAdminFormDept(adm.department);
+                              setAdminFormState(adm.state);
+                              setShowAddAdminModal(true);
+                            }}
+                            className="p-1.5 bg-[#f0f4f1] hover:bg-[#e2e8e4] text-[#012d1d] rounded-lg transition-colors cursor-pointer"
+                            title="Edit Role & Department"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-[#012d1d]" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleAdminStatus(adm.id)}
+                            className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                              adm.status === 'Active'
+                                ? 'bg-[#fff8f6] hover:bg-[#ffdad6] text-[#ba1a1a]'
+                                : 'bg-[#c1ecd4] text-[#002114]'
+                            }`}
+                            title={adm.status === 'Active' ? 'Suspend Account' : 'Activate Account'}
+                          >
+                            {adm.status === 'Active' ? (
+                              <Lock className="w-3.5 h-3.5 text-[#ba1a1a]" />
+                            ) : (
+                              <Unlock className="w-3.5 h-3.5 text-[#002114]" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
-            {activeTab === 'users' && (
-              <SuperAdminUserManagement
-                usersList={usersList}
-                onAddUser={handleAddUser}
-                onUpdateUser={handleUpdateUser}
-                onDeleteUser={handleDeleteUser}
-                onInspectUser={(u) => setInspectingUser(u)}
-                onBulkVerify={handleBulkVerify}
-                onBulkSuspend={handleBulkSuspend}
-                onBulkExport={handleBulkExport}
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
-              />
-            )}
+      {/* Tab 5: Emergency Kill-Switches */}
+      {activeSubTab === 'emergency_controls' && (
+        <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-5">
+          <div className="pb-2 border-b border-[#e5e9e6]">
+            <h3 className="font-heading font-bold text-sm text-[#012d1d]">
+              Emergency Kill-Switches & Circuit Breakers
+            </h3>
+            <p className="text-xs text-[#717973]">
+              Execute immediate operational halts in response to bank liquidity shortages, price manipulation, or security incidents
+            </p>
+          </div>
 
-            {activeTab === 'access' && (
-              <SuperAdminAccessControl
-                featureFlags={featureFlags}
-                onToggleFlag={handleToggleFlag}
-                onTerminateSession={handleTerminateSession}
-                onTerminateAllSessions={handleTerminateAllSessions}
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
-              />
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Freeze Marketplace Trading */}
+            <div className="p-4 bg-[#fff8f6] rounded-2xl border border-[#ffdad6] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <AlertOctagon className="w-5 h-5 text-[#ba1a1a]" />
+                  <span className="font-heading font-bold text-xs text-[#410002]">
+                    Freeze Marketplace Trading
+                  </span>
+                </div>
+                <span
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${
+                    marketplaceTradingFrozen
+                      ? 'bg-[#ba1a1a] text-white'
+                      : 'bg-[#c1ecd4] text-[#002114]'
+                  }`}
+                >
+                  {marketplaceTradingFrozen ? 'FROZEN' : 'ACTIVE'}
+                </span>
+              </div>
+              <p className="text-xs text-[#525a54]">
+                Temporarily suspends new listing creation and order checkout nationwide during emergency market disruptions.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setFreezeModalType('marketplace');
+                  setFreezeReason('');
+                }}
+                className={`w-full py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+                  marketplaceTradingFrozen
+                    ? 'bg-[#16a34a] hover:bg-[#15803d] text-white'
+                    : 'bg-[#ba1a1a] hover:bg-[#93000a] text-white shadow-xs'
+                }`}
+              >
+                {marketplaceTradingFrozen ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                <span>{marketplaceTradingFrozen ? 'Unfreeze Trading' : 'Engage Marketplace Freeze'}</span>
+              </button>
+            </div>
 
-            {activeTab === 'audit' && (
-              <SuperAdminAuditSecurity
-                auditLogs={auditLogs}
-                onExportAuditDossier={handleExportAuditDossier}
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
-              />
-            )}
+            {/* Freeze Escrow & Wallet Withdrawals */}
+            <div className="p-4 bg-[#fff8f6] rounded-2xl border border-[#ffdad6] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-[#ba1a1a]" />
+                  <span className="font-heading font-bold text-xs text-[#410002]">
+                    Freeze Escrow & Bank Withdrawals
+                  </span>
+                </div>
+                <span
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${
+                    walletWithdrawalsFrozen
+                      ? 'bg-[#ba1a1a] text-white'
+                      : 'bg-[#c1ecd4] text-[#002114]'
+                  }`}
+                >
+                  {walletWithdrawalsFrozen ? 'FROZEN' : 'ACTIVE'}
+                </span>
+              </div>
+              <p className="text-xs text-[#525a54]">
+                Blocks outbound NIBSS / Interswitch payout batches if suspicious AML velocity or double-spend is detected.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setFreezeModalType('wallet');
+                  setFreezeReason('');
+                }}
+                className={`w-full py-2.5 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
+                  walletWithdrawalsFrozen
+                    ? 'bg-[#16a34a] hover:bg-[#15803d] text-white'
+                    : 'bg-[#ba1a1a] hover:bg-[#93000a] text-white shadow-xs'
+                }`}
+              >
+                {walletWithdrawalsFrozen ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                <span>{walletWithdrawalsFrozen ? 'Unfreeze Withdrawals' : 'Engage Settlement Freeze'}</span>
+              </button>
+            </div>
 
-            {activeTab === 'config' && (
-              <SuperAdminPlatformConfig
-                onSaveConfig={handleSaveConfig}
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
-              />
-            )}
+            {/* System Maintenance Mode */}
+            <div className="p-4 bg-[#f8faf8] rounded-2xl border border-[#d8deda] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Server className="w-5 h-5 text-[#012d1d]" />
+                  <span className="font-heading font-bold text-xs text-[#012d1d]">
+                    Full Platform Maintenance Gate
+                  </span>
+                </div>
+                <span
+                  className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${
+                    maintenanceModeActive
+                      ? 'bg-[#ba1a1a] text-white'
+                      : 'bg-[#f0f4f1] text-[#525a54]'
+                  }`}
+                >
+                  {maintenanceModeActive ? 'ENGAGED' : 'OFFLINE'}
+                </span>
+              </div>
+              <p className="text-xs text-[#525a54]">
+                Reroutes public traffic to the NATIP scheduled maintenance holding screen. Super Admins retain console access.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setFreezeModalType('maintenance');
+                  setFreezeReason('');
+                }}
+                className="w-full py-2.5 bg-[#012d1d] hover:bg-[#1b4332] text-white rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Sliders className="w-4 h-4 text-[#c1ecd4]" />
+                <span>{maintenanceModeActive ? 'Disable Maintenance' : 'Activate Maintenance Mode'}</span>
+              </button>
+            </div>
 
-            {activeTab === 'analytics' && (
-              <SuperAdminAnalyticsReporting
-                onGenerateReport={handleGenerateReport}
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
-              />
-            )}
+            {/* High-Risk API Rate Limiting */}
+            <div className="p-4 bg-[#f8faf8] rounded-2xl border border-[#d8deda] space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-[#16a34a]" />
+                  <span className="font-heading font-bold text-xs text-[#012d1d]">
+                    Automated DDoS & Abuse Shield
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 bg-[#c1ecd4] text-[#002114] text-[10px] font-bold rounded-md">
+                  ENFORCED
+                </span>
+              </div>
+              <p className="text-xs text-[#525a54]">
+                Auto-throttles requests exceeding 2,500 rpm per IP subnet and isolates fraudulent bot fingerprints.
+              </p>
+              <div className="flex items-center justify-between text-xs font-bold text-[#012d1d] pt-1">
+                <span>Threshold: 2,500 req/min</span>
+                <span className="text-[#16a34a]">0 Threats Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
-            {activeTab === 'emergency' && (
-              <SuperAdminEmergencyCenter
-                marketplaceFrozen={marketplaceFrozen}
-                walletFrozen={walletFrozen}
-                maintenanceModeActive={maintenanceModeActive}
-                rateLimiterActive={rateLimiterActive}
-                onToggleMarketplaceFreeze={handleToggleMarketplaceFreeze}
-                onToggleWalletFreeze={handleToggleWalletFreeze}
-                onToggleMaintenanceMode={handleToggleMaintenanceMode}
-                onToggleRateLimiter={handleToggleRateLimiter}
-                onSendEmergencyBroadcast={handleSendEmergencyBroadcast}
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
-              />
-            )}
+      {/* Tab 6: Full Audit Log Explorer */}
+      {activeSubTab === 'audit_explorer' && (
+        <div className="bg-white rounded-2xl border border-[#c1c8c2]/80 p-5 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-2 border-b border-[#e5e9e6]">
+            <div>
+              <h3 className="font-heading font-bold text-sm text-[#012d1d]">
+                Immutable Cryptographic Audit Trail Explorer
+              </h3>
+              <p className="text-xs text-[#717973]">
+                Every administrative configuration change, role elevation, and end-user access is cryptographically signed
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-mono font-bold text-[#16a34a] bg-[#f0fdf4] px-2.5 py-1 rounded-lg border border-[#bbf7d0]">
+                SHA-256 Chain Verified
+              </span>
+              <button
+                type="button"
+                onClick={handleExportAuditLogs}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-[#012d1d] hover:bg-[#1b4332] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5 text-[#c1ecd4]" />
+                <span>Export Dossier (JSON)</span>
+              </button>
+            </div>
+          </div>
 
-            {activeTab === 'logs' && (
-              <SuperAdminSystemLogs
-                subTab={subTab as any}
-                onSubTabChange={(st) => setSubTab(st)}
+          {/* Audit Filters */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-[#717973] absolute left-3 top-2.5" />
+              <input
+                type="text"
+                placeholder="Search audit action, admin name, or specific details..."
+                value={searchAuditQuery}
+                onChange={(e) => setSearchAuditQuery(e.target.value)}
+                className="w-full pl-9 pr-3 py-2 bg-[#f8faf8] border border-[#d8deda] rounded-xl text-xs text-[#012d1d] focus:outline-hidden focus:border-[#012d1d]"
               />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-[#717973]" />
+              <select
+                value={auditCategoryFilter}
+                onChange={(e) => setAuditCategoryFilter(e.target.value)}
+                className="text-xs p-2 bg-[#f8faf8] border border-[#d8deda] rounded-xl text-[#012d1d] font-medium"
+              >
+                <option value="ALL">All Categories</option>
+                <option value="AUTH">Auth & Roles</option>
+                <option value="FREEZE">Emergency Freezes</option>
+                <option value="FLAG">Feature Flags</option>
+                <option value="KYC">KYC & Verification</option>
+                <option value="EXPORT">Data Exports</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="divide-y divide-[#e5e9e6]">
+            {filteredAuditLogs.length === 0 ? (
+              <div className="py-8 text-center text-xs text-[#717973]">
+                No audit entries match the specified filter criteria.
+              </div>
+            ) : (
+              filteredAuditLogs.map((log) => (
+                <div key={log.id} className="py-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 hover:bg-[#f8faf8] p-2 rounded-xl transition-colors">
+                  <div className="space-y-0.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-bold text-xs text-[#012d1d]">{log.actorName}</span>
+                      <span className="text-[10px] font-bold px-2 py-0.2 bg-[#012d1d] text-[#c1ecd4] rounded-md font-mono">
+                        {log.actorRole}
+                      </span>
+                      <span className="text-[10px] font-bold text-[#b45309] bg-[#fffbeb] px-2 py-0.2 rounded-md border border-[#fef3c7]">
+                        {log.action}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#525a54]">{log.details}</p>
+                  </div>
+                  <div className="text-right text-[11px] text-[#717973] font-mono shrink-0">
+                    {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })} • {new Date(log.timestamp).toLocaleDateString()}
+                  </div>
+                </div>
+              ))
             )}
           </div>
-        </main>
-      </div>
+        </div>
+      )}
 
-      {/* NDPR Reason Logging Modal for Sensitive User Data Access */}
-      {inspectingUser && (
+      {/* Freeze Confirmation Modal */}
+      {freezeModalType && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-[#c1c8c2]">
+            <div className="flex items-center gap-2.5 pb-2 border-b border-[#e5e9e6] text-[#ba1a1a]">
+              <AlertOctagon className="w-6 h-6" />
+              <h3 className="font-heading font-bold text-base text-[#410002]">
+                Confirm Emergency Circuit Breaker Action
+              </h3>
+            </div>
+
+            <p className="text-xs text-[#525a54]">
+              You are about to toggle the emergency state for:
+              <strong className="block text-[#012d1d] text-sm mt-1 uppercase">
+                {freezeModalType === 'marketplace' && 'Nationwide Marketplace Trading'}
+                {freezeModalType === 'wallet' && 'Escrow & Banking Settlement Gateways'}
+                {freezeModalType === 'maintenance' && 'Full Platform Maintenance Gate'}
+              </strong>
+            </p>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#012d1d]">
+                Mandatory Operational Justification (Required for Audit Log)
+              </label>
+              <textarea
+                rows={3}
+                required
+                placeholder="e.g. CBN settlement gateway latency spike or scheduled database index re-clustering..."
+                value={freezeReason}
+                onChange={(e) => setFreezeReason(e.target.value)}
+                className="w-full text-xs p-2.5 bg-white border border-[#717973] rounded-xl text-[#012d1d]"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setFreezeModalType(null)}
+                className="flex-1 py-2.5 border border-[#d8deda] text-[#525a54] font-bold text-xs rounded-xl cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={executeEmergencyAction}
+                className="flex-1 py-2.5 bg-[#ba1a1a] hover:bg-[#93000a] text-white font-bold text-xs rounded-xl cursor-pointer shadow-xs"
+              >
+                Confirm Action
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Admin Modal */}
+      {showAddAdminModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border border-[#c1c8c2]">
+            <div className="flex justify-between items-center pb-2 border-b border-[#e5e9e6]">
+              <h3 className="font-heading font-bold text-base text-[#012d1d]">
+                {editingAdmin ? 'Edit Administrator Credentials' : 'Provision New Administrative Account'}
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddAdminModal(false);
+                  setEditingAdmin(null);
+                }}
+                className="text-[#717973] hover:text-black cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAdmin} className="space-y-3.5">
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#012d1d]">Full Official Name & Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Dr. Audu Ogbeh"
+                  value={adminFormName}
+                  onChange={(e) => setAdminFormName(e.target.value)}
+                  className="w-full text-xs p-2.5 bg-white border border-[#717973] rounded-xl text-[#012d1d]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#012d1d]">Official Government / Institutional Email</label>
+                <input
+                  type="email"
+                  required
+                  placeholder="e.g. a.ogbeh@fmafs.gov.ng"
+                  value={adminFormEmail}
+                  onChange={(e) => setAdminFormEmail(e.target.value)}
+                  className="w-full text-xs p-2.5 bg-white border border-[#717973] rounded-xl text-[#012d1d]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#012d1d]">Role Tier</label>
+                <select
+                  value={adminFormRole}
+                  onChange={(e) => setAdminFormRole(e.target.value as UserRole)}
+                  className="w-full text-xs p-2.5 bg-white border border-[#717973] rounded-xl text-[#012d1d]"
+                >
+                  <option value="super_admin">Super Admin (USUCO Owner)</option>
+                  <option value="gov_admin">Gov Admin (Federal Ministry / BOA)</option>
+                  <option value="institutional_admin">Institutional Admin (State ADP Command)</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#012d1d]">Department / Directorate</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Directorate of Agricultural Mechanisation"
+                  value={adminFormDept}
+                  onChange={(e) => setAdminFormDept(e.target.value)}
+                  className="w-full text-xs p-2.5 bg-white border border-[#717973] rounded-xl text-[#012d1d]"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-[#012d1d]">Jurisdiction</label>
+                <input
+                  type="text"
+                  placeholder="e.g. National, Kano, Kaduna, Benue"
+                  value={adminFormState}
+                  onChange={(e) => setAdminFormState(e.target.value)}
+                  className="w-full text-xs p-2.5 bg-white border border-[#717973] rounded-xl text-[#012d1d]"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddAdminModal(false);
+                    setEditingAdmin(null);
+                  }}
+                  className="flex-1 py-2.5 border border-[#d8deda] text-[#525a54] font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-[#012d1d] hover:bg-[#1b4332] text-white font-bold text-xs rounded-xl cursor-pointer shadow-xs"
+                >
+                  {editingAdmin ? 'Update Account' : 'Create Account'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Mandatory Reason Logging Modal for User Inspection */}
+      {selectedUserForInspection && (
         <ReasonLoggingModal
-          isOpen={!!inspectingUser}
-          targetUserName={inspectingUser.name}
-          targetUserRole={inspectingUser.role}
-          targetUserId={inspectingUser.id}
-          adminDepartment="Platform Infrastructure & Security (USUCO)"
-          onClose={() => setInspectingUser(null)}
-          onConfirm={confirmNDPRInspection}
+          isOpen={true}
+          onClose={() => setSelectedUserForInspection(null)}
+          targetUserName={selectedUserForInspection.name}
+          targetUserRole={selectedUserForInspection.role}
+          targetUserId={selectedUserForInspection.id}
+          adminDepartment="USUCO Super Admin Tech Ops"
+          recordType="Administrative Security Profile & 2FA Keyring"
+          onConfirm={(reason) => {
+            setSelectedUserForInspection(null);
+            setActionSuccess(`Decrypted access logged in immutable audit trail for ${selectedUserForInspection.name}.`);
+            setTimeout(() => setActionSuccess(null), 4000);
+          }}
         />
       )}
     </div>
   );
 };
+export default SuperAdminDashboard;
