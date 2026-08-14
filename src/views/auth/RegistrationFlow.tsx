@@ -114,7 +114,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-[#1a1c1c] mb-1">
-              Full Name / Primary Contact <span className="text-[#ba1a1a]">*</span>
+              Your Full Name <span className="text-[#ba1a1a]">*</span>
             </label>
             <input
               type="text"
@@ -143,7 +143,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Email Address</label>
+            <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Email Address (Optional)</label>
             <input
               type="email"
               name="email"
@@ -156,7 +156,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
 
           <div>
             <label className="block text-xs font-bold text-[#1a1c1c] mb-1">
-              Primary Operating State <span className="text-[#ba1a1a]">*</span>
+              Your State <span className="text-[#ba1a1a]">*</span>
             </label>
             <select
               name="state"
@@ -177,7 +177,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
         {selectedRole === 'farmer' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2]">
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Primary Crops Grown</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Crops You Farm</label>
               <input
                 type="text"
                 name="cropTypes"
@@ -188,7 +188,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Farm Size (Hectares)</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Farm Size (Hectares or Acres)</label>
               <input
                 type="number"
                 name="farmSizeHectares"
@@ -199,7 +199,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">National Identity Number (NIN)</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">National Identity Number (11-digit NIN)</label>
               <input
                 type="text"
                 name="nin"
@@ -215,18 +215,18 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
         {selectedRole === 'cooperative' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2]">
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Registered Cooperative Name</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Cooperative Name</label>
               <input
                 type="text"
                 name="companyName"
                 value={formData.companyName}
                 onChange={handleChange}
-                placeholder="e.g. Zaria Farmers Co-op Society"
+                placeholder="e.g. Zaria Farmers Co-op Group"
                 className="w-full h-11 px-3 rounded-lg border border-[#717973] bg-white text-xs text-[#1a1c1c]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Active Member Count</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Number of Member Farmers</label>
               <input
                 type="number"
                 name="memberCount"
@@ -237,7 +237,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">CAC Registration / Registration No.</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Cooperative Registration Number (CAC / State)</label>
               <input
                 type="text"
                 name="cacNumber"
@@ -253,18 +253,18 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
         {selectedRole === 'buyer' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2]">
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Company / Enterprise Name</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Business / Company Name</label>
               <input
                 type="text"
                 name="companyName"
                 value={formData.companyName}
                 onChange={handleChange}
-                placeholder="e.g. Premium Food Processors Ltd"
+                placeholder="e.g. Premium Grain Processors Ltd"
                 className="w-full h-11 px-3 rounded-lg border border-[#717973] bg-white text-xs text-[#1a1c1c]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Business Type</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">What Type of Buyer Are You?</label>
               <select
                 name="businessType"
                 value={formData.businessType}
@@ -272,9 +272,9 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
                 className="w-full h-11 px-3 rounded-lg border border-[#717973] bg-white text-xs text-[#1a1c1c]"
               >
                 <option value="Food Processing">Food Processing Factory</option>
-                <option value="Commodity Exporter">Commodity Exporter</option>
-                <option value="Wholesaler / Aggregator">Wholesaler & Aggregator</option>
-                <option value="Institutional Buyer">Institutional Buyer</option>
+                <option value="Commodity Exporter">Crop Exporter</option>
+                <option value="Wholesaler / Aggregator">Wholesale Trader / Aggregator</option>
+                <option value="Institutional Buyer">School / Feeding Agency / Large Buyer</option>
               </select>
             </div>
           </div>
@@ -283,7 +283,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
         {selectedRole === 'supplier' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2]">
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Input Merchant Business Name</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Shop / Business Name</label>
               <input
                 type="text"
                 name="companyName"
@@ -294,7 +294,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">NAFDAC / License Status</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">License / Registration Number</label>
               <input
                 type="text"
                 name="cacNumber"
@@ -310,21 +310,21 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
         {selectedRole === 'transporter' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2]">
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Vehicle / Haulage Type</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Vehicle / Truck Type</label>
               <select
                 name="vehicleType"
                 value={formData.vehicleType}
                 onChange={handleChange}
                 className="w-full h-11 px-3 rounded-lg border border-[#717973] bg-white text-xs text-[#1a1c1c]"
               >
-                <option value="30-Ton Flatbed Truck">30-Ton Flatbed Truck</option>
-                <option value="15-Ton Covered Van">15-Ton Covered Van</option>
+                <option value="30-Ton Flatbed Truck">30-Ton Big Truck</option>
+                <option value="15-Ton Covered Van">15-Ton Covered Truck</option>
                 <option value="5-Ton Pick-Up">5-Ton Pick-Up Truck</option>
                 <option value="Tractor & Trailer">Tractor & Trailer</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">License Plate Number</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Number Plate</label>
               <input
                 type="text"
                 name="licensePlate"
@@ -340,18 +340,18 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
         {(selectedRole === 'institutional_admin' || selectedRole === 'gov_admin' || selectedRole === 'super_admin') && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2]">
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Ministry Department / Bureau</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Department / Office</label>
               <input
                 type="text"
                 name="department"
                 value={formData.department}
                 onChange={handleChange}
-                placeholder="e.g. ADP Directorate"
+                placeholder="e.g. Field Extension Office"
                 className="w-full h-11 px-3 rounded-lg border border-[#717973] bg-white text-xs text-[#1a1c1c]"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Official Employee ID</label>
+              <label className="block text-xs font-bold text-[#1a1c1c] mb-1">Staff ID Number</label>
               <input
                 type="text"
                 name="employeeId"
@@ -368,7 +368,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
           type="submit"
           className="w-full h-12 bg-[#012d1d] text-white font-heading font-bold text-sm rounded-full flex items-center justify-center gap-2 hover:bg-[#1b4332] active:scale-95 transition-all shadow-md mt-4"
         >
-          <span>Complete Registration & Verify Identity</span>
+          <span>Finish & Save Profile</span>
           <span className="material-symbols-outlined text-[18px]">verified_user</span>
         </button>
       </form>

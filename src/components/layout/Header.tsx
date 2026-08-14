@@ -28,15 +28,15 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
           <div className="animate-marquee flex items-center gap-10 whitespace-nowrap">
             <div className="flex items-center gap-2.5">
               <span className="bg-[#1b4332] text-[#86af99] text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0">FMAFS + USUCO</span>
-              <span>Federal Ministry of Agriculture & Food Security • USUCO Agro-Connect</span>
+              <span>Federal Ministry of Agriculture • USUCO Agro-Connect</span>
               <span className="text-[#86af99] font-bold">•</span>
-              <span className="text-[#c1ecd4]">2026 National Agricultural Digital Registry & Subsidies</span>
+              <span className="text-[#c1ecd4]">Official Nigerian Farm Registry & Government Support</span>
             </div>
             <div className="flex items-center gap-2.5">
               <span className="bg-[#1b4332] text-[#86af99] text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0">FMAFS + USUCO</span>
-              <span>Federal Ministry of Agriculture & Food Security • USUCO Agro-Connect</span>
+              <span>Federal Ministry of Agriculture • USUCO Agro-Connect</span>
               <span className="text-[#86af99] font-bold">•</span>
-              <span className="text-[#c1ecd4]">2026 National Agricultural Digital Registry & Subsidies</span>
+              <span className="text-[#c1ecd4]">Official Nigerian Farm Registry & Government Support</span>
             </div>
           </div>
         </div>

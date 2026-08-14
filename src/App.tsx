@@ -48,10 +48,16 @@ export const App: React.FC = () => {
 
   // 2. Unauthenticated Onboarding or Fullscreen Auth View State
   if (!user || activeView === 'splash' || activeView === 'role_selection') {
-    if (activeView === 'role_selection') return <RoleSelection />;
-    if (activeView === 'register') return <RegistrationFlow />;
-    if (activeView === 'verify_identity') return <IdentityVerification />;
-    return <SplashScreen />;
+    return (
+      <div className="min-h-screen bg-[#e6ece8] text-[#1a1c1c] flex flex-col font-body selection:bg-[#c1ecd4] selection:text-[#002114] justify-center items-center">
+        <div className="w-full max-w-[1440px] min-h-screen bg-white shadow-2xl border-x border-[#c1c8c2]/40 flex flex-col relative overflow-hidden">
+          {activeView === 'role_selection' && <RoleSelection />}
+          {activeView === 'register' && <RegistrationFlow />}
+          {activeView === 'verify_identity' && <IdentityVerification />}
+          {activeView !== 'role_selection' && activeView !== 'register' && activeView !== 'verify_identity' && <SplashScreen />}
+        </div>
+      </div>
+    );
   }
 
   // 3. Render Dashboard based on User Role if 'dashboard' is activeView
@@ -101,23 +107,25 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f3f3f3] text-[#1a1c1c] flex flex-col font-body selection:bg-[#c1ecd4] selection:text-[#002114]">
-      {/* Top Navigation Header */}
-      <Header />
+    <div className="min-h-screen bg-[#e6ece8] text-[#1a1c1c] flex flex-col font-body selection:bg-[#c1ecd4] selection:text-[#002114] justify-center items-center">
+      <div className="w-full max-w-[1440px] min-h-screen bg-[#f3f3f3] shadow-2xl border-x border-[#c1c8c2]/40 flex flex-col relative overflow-hidden">
+        {/* Top Navigation Header */}
+        <Header />
 
-      {/* Main Body with Responsive Sidebar */}
-      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
-        <aside className="hidden md:block w-60 shrink-0">
-          <SidebarNav />
-        </aside>
+        {/* Main Body with Responsive Sidebar */}
+        <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6 items-start">
+          <aside className="hidden md:block w-64 shrink-0">
+            <SidebarNav />
+          </aside>
 
-        <main className="flex-1 min-w-0 pb-20 md:pb-6">
-          {renderActiveView()}
-        </main>
+          <main className="flex-1 min-w-0 pb-20 md:pb-6">
+            {renderActiveView()}
+          </main>
+        </div>
+
+        {/* Mobile Bottom Navigation Bar */}
+        <BottomNav />
       </div>
-
-      {/* Mobile Bottom Navigation Bar */}
-      <BottomNav />
     </div>
   );
 };

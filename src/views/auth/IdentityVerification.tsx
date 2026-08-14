@@ -31,12 +31,12 @@ export const IdentityVerification: React.FC<IdentityVerificationProps> = ({ onCo
   return (
     <div className="min-h-screen bg-[#f9f9f9] flex flex-col justify-between p-4 sm:p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between pb-4 border-b border-[#c1c8c2]">
-        <h1 className="font-heading font-bold text-lg text-[#012d1d]">Identity Verification (KYC)</h1>
+        <h1 className="font-heading font-bold text-lg text-[#012d1d]">Verify Your Identity</h1>
         <button
           onClick={onSkip}
           className="text-xs font-bold text-[#717973] hover:text-[#012d1d] hover:underline"
         >
-          Skip for Now →
+          Do this Later →
         </button>
       </div>
 
@@ -46,9 +46,9 @@ export const IdentityVerification: React.FC<IdentityVerificationProps> = ({ onCo
             <span className="material-symbols-outlined text-[28px]">verified_user</span>
           </div>
           <div>
-            <h2 className="font-heading font-bold text-base">Federal Ministry Verification</h2>
+            <h2 className="font-heading font-bold text-base">Account Verification</h2>
             <p className="text-xs text-[#86af99]">
-              Verify your NIN, CAC or Farmers ID to unlock higher transaction limits and subsidy eligibility.
+              Add your NIN or CAC number to unlock higher wallet limits, loan access, and government fertilizer benefits.
             </p>
           </div>
         </div>
@@ -96,7 +96,7 @@ export const IdentityVerification: React.FC<IdentityVerificationProps> = ({ onCo
                 {idUploaded ? 'check_circle' : 'badge'}
               </span>
               <span className="font-bold text-xs">
-                {idUploaded ? 'NIN / Government ID Attached' : 'Upload National ID / Driver License'}
+                {idUploaded ? 'ID Card Attached ✓' : 'Upload ID Card or Voter Card'}
               </span>
             </button>
 
@@ -113,7 +113,7 @@ export const IdentityVerification: React.FC<IdentityVerificationProps> = ({ onCo
                 {selfieUploaded ? 'check_circle' : 'photo_camera'}
               </span>
               <span className="font-bold text-xs">
-                {selfieUploaded ? 'Facial Verification Uploaded' : 'Take Facial Selfie'}
+                {selfieUploaded ? 'Photo Attached ✓' : 'Take a Photo of Your Face'}
               </span>
             </button>
           </div>
@@ -126,11 +126,11 @@ export const IdentityVerification: React.FC<IdentityVerificationProps> = ({ onCo
             {isVerifying ? (
               <>
                 <span className="material-symbols-outlined animate-spin text-[18px]">sync</span>
-                <span>Connecting to NIMC Database...</span>
+                <span>Checking NIN details...</span>
               </>
             ) : (
               <>
-                <span>Submit for Verification</span>
+                <span>Confirm & Verify ID</span>
                 <span className="material-symbols-outlined text-[18px]">security</span>
               </>
             )}

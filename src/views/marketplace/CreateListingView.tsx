@@ -57,9 +57,9 @@ export const CreateListingView: React.FC = () => {
       <div className="flex items-center justify-between pb-4 border-b border-[#e2e2e2]">
         <div>
           <span className="text-xs font-bold uppercase text-[#012d1d] bg-[#c1ecd4] px-2.5 py-0.5 rounded-full">
-            Federal Digital Commodity Registry
+            Sell Farm Produce or Supplies
           </span>
-          <h1 className="font-heading font-bold text-xl text-[#012d1d] mt-1">Post Agricultural Listing</h1>
+          <h1 className="font-heading font-bold text-xl text-[#012d1d] mt-1">Post Item for Sale</h1>
         </div>
         <button
           onClick={() => setActiveView('marketplace')}
@@ -71,11 +71,11 @@ export const CreateListingView: React.FC = () => {
 
       <form onSubmit={handleSubmit} className="space-y-4 text-xs">
         <div>
-          <label className="block font-bold text-[#1a1c1c] mb-1">Listing Title</label>
+          <label className="block font-bold text-[#1a1c1c] mb-1">Item Title / Headline</label>
           <input
             type="text"
             required
-            placeholder="e.g. Premium White Maize (2026 Dry Season Harvest)"
+            placeholder="e.g. Clean Dry White Maize (Bag or Ton)"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             className="w-full h-11 px-3 rounded-xl border border-[#717973] focus:ring-2 focus:ring-[#012d1d]"
@@ -84,7 +84,7 @@ export const CreateListingView: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block font-bold text-[#1a1c1c] mb-1">Crop / Input Category</label>
+            <label className="block font-bold text-[#1a1c1c] mb-1">Type of Crop or Item</label>
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -92,18 +92,18 @@ export const CreateListingView: React.FC = () => {
             >
               <option value="Grains">Grains (Maize, Rice, Sorghum)</option>
               <option value="Tubers">Tubers (Yam, Cassava)</option>
-              <option value="Vegetables">Vegetables & Legumes (Soybeans, Tomatoes)</option>
-              <option value="Inputs">Inputs (Fertilizer, Seeds, Chemicals)</option>
-              <option value="Processed">Processed (Cassava Flour, Palm Oil)</option>
+              <option value="Vegetables">Vegetables & Beans (Soybeans, Tomatoes)</option>
+              <option value="Inputs">Farm Supplies (Fertilizer, Seeds, Chemicals)</option>
+              <option value="Processed">Processed Foods (Cassava Flour, Palm Oil)</option>
             </select>
           </div>
 
           <div>
-            <label className="block font-bold text-[#1a1c1c] mb-1">Specific Commodity Name</label>
+            <label className="block font-bold text-[#1a1c1c] mb-1">Exact Item Name</label>
             <input
               type="text"
               required
-              placeholder="e.g. Yellow Maize, TME 419 Cassava"
+              placeholder="e.g. Yellow Maize, Cassava Roots"
               value={formData.cropType}
               onChange={(e) => setFormData({ ...formData, cropType: e.target.value })}
               className="w-full h-11 px-3 rounded-xl border border-[#717973]"
@@ -124,7 +124,7 @@ export const CreateListingView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-bold text-[#1a1c1c] mb-1">Unit Type</label>
+            <label className="block font-bold text-[#1a1c1c] mb-1">How is it Measured?</label>
             <select
               value={formData.unit}
               onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
@@ -138,7 +138,7 @@ export const CreateListingView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-bold text-[#1a1c1c] mb-1">Available Supply</label>
+            <label className="block font-bold text-[#1a1c1c] mb-1">Quantity Available to Sell</label>
             <input
               type="number"
               required
@@ -151,7 +151,7 @@ export const CreateListingView: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block font-bold text-[#1a1c1c] mb-1">Origin State</label>
+            <label className="block font-bold text-[#1a1c1c] mb-1">Farm / Storage Location (State)</label>
             <input
               type="text"
               required
@@ -162,7 +162,7 @@ export const CreateListingView: React.FC = () => {
           </div>
 
           <div>
-            <label className="block font-bold text-[#1a1c1c] mb-1">Minimum Order Quantity</label>
+            <label className="block font-bold text-[#1a1c1c] mb-1">Smallest Amount a Buyer Can Order</label>
             <input
               type="number"
               required
@@ -174,12 +174,12 @@ export const CreateListingView: React.FC = () => {
         </div>
 
         <div>
-          <label className="block font-bold text-[#1a1c1c] mb-1">Detailed Description</label>
+          <label className="block font-bold text-[#1a1c1c] mb-1">Tell Buyers More About Your Crop</label>
           <textarea
             rows={3}
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            placeholder="Describe harvest date, storage condition, variety, quality certifications..."
+            placeholder="Tell buyers about harvest date, quality, storage conditions..."
             className="w-full p-3 rounded-xl border border-[#717973]"
           />
         </div>
@@ -190,11 +190,11 @@ export const CreateListingView: React.FC = () => {
           className="w-full h-12 bg-[#012d1d] text-white font-heading font-bold text-sm rounded-full hover:bg-[#1b4332] active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
         >
           {isSubmitting ? (
-            <span>Publishing to Marketplace...</span>
+            <span>Posting Item...</span>
           ) : (
             <>
               <span className="material-symbols-outlined text-[18px]">publish</span>
-              <span>Publish Verified Listing</span>
+              <span>Post Item for Sale</span>
             </>
           )}
         </button>

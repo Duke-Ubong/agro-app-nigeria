@@ -3,14 +3,14 @@ import { useAuth } from '../../context/AuthContext';
 import { UserRole } from '../../types';
 
 export const ROLE_LABELS: Record<UserRole, { title: string; subtitle: string; icon: string }> = {
-  farmer: { title: 'Farmer', subtitle: 'Producers & Smallholders', icon: 'grass' },
-  cooperative: { title: 'Cooperative', subtitle: 'Cluster & Group Lead', icon: 'groups' },
-  buyer: { title: 'Buyer / Processor', subtitle: 'Enterprise & Off-taker', icon: 'storefront' },
-  supplier: { title: 'Input Supplier', subtitle: 'Seeds, Fertilizer & Tools', icon: 'water_drop' },
-  transporter: { title: 'Transporter', subtitle: 'Haulage & Fleet Logistics', icon: 'local_shipping' },
-  institutional_admin: { title: 'Institutional Admin', subtitle: 'State Ag Development (ADP)', icon: 'domain' },
-  gov_admin: { title: 'Gov Regulator Admin', subtitle: 'Federal Ministry Directorate', icon: 'policy' },
-  super_admin: { title: 'Super Admin', subtitle: 'System & Developer Portal', icon: 'admin_panel_settings' },
+  farmer: { title: 'Farmer', subtitle: 'Grow & Sell Crops', icon: 'grass' },
+  cooperative: { title: 'Cooperative', subtitle: 'Farmer Groups & Unions', icon: 'groups' },
+  buyer: { title: 'Buyer / Factory', subtitle: 'Wholesalers & Food Processors', icon: 'storefront' },
+  supplier: { title: 'Farm Supplies Shop', subtitle: 'Seeds, Fertilizer & Tools', icon: 'water_drop' },
+  transporter: { title: 'Transporter', subtitle: 'Trucks & Produce Delivery', icon: 'local_shipping' },
+  institutional_admin: { title: 'State Extension Admin', subtitle: 'State Ministry (ADP)', icon: 'domain' },
+  gov_admin: { title: 'Ministry Admin', subtitle: 'Federal Agriculture Ministry', icon: 'policy' },
+  super_admin: { title: 'Super Admin', subtitle: 'Platform Management', icon: 'admin_panel_settings' },
 };
 
 export const RoleSwitcher: React.FC = () => {

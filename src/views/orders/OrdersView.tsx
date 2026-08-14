@@ -36,17 +36,17 @@ export const OrdersView: React.FC = () => {
       <div className="bg-[#012d1d] text-white p-6 rounded-2xl shadow-sm border border-[#1b4332] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-[#86af99]">
-            National Escrow & Waybill Tracking
+            Deliveries & Orders
           </span>
-          <h1 className="font-heading font-bold text-2xl mt-1">Contract Orders & Freight Tracking</h1>
+          <h1 className="font-heading font-bold text-2xl mt-1">My Orders & Trip Status</h1>
           <p className="text-xs text-[#86af99]">
-            Monitor produce dispatch, transit milestones, GPS waybills, and secure escrow settlement.
+            Track when your crop is picked up, where the truck is on the road, and when payment is released.
           </p>
         </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-[#c1c8c2] p-4 space-y-4">
-        <h3 className="font-heading font-bold text-sm text-[#012d1d]">Active Trade Contracts ({myOrders.length})</h3>
+        <h3 className="font-heading font-bold text-sm text-[#012d1d]">Active Orders ({myOrders.length})</h3>
 
         <div className="space-y-3">
           {myOrders.map((ord) => {
@@ -77,7 +77,13 @@ export const OrdersView: React.FC = () => {
                       ₦{ord.totalPrice.toLocaleString()}
                     </div>
                     <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-[#c1ecd4] text-[#002114]">
-                      {ord.status.replace('_', ' ')}
+                      {ord.status === 'in_transit'
+                        ? 'On the Road'
+                        : ord.status === 'delivered'
+                        ? 'Arrived at Destination'
+                        : ord.status === 'completed'
+                        ? 'Completed & Paid'
+                        : ord.status}
                     </span>
                   </div>
                 </div>
@@ -85,11 +91,11 @@ export const OrdersView: React.FC = () => {
                 {/* Progress Timeline Tracker */}
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-bold text-[#717973] uppercase">
-                    <span className={step >= 1 ? 'text-[#012d1d]' : ''}>Order Locked</span>
-                    <span className={step >= 2 ? 'text-[#012d1d]' : ''}>Dispatched</span>
-                    <span className={step >= 3 ? 'text-[#012d1d]' : ''}>In Transit</span>
+                    <span className={step >= 1 ? 'text-[#012d1d]' : ''}>Order Placed</span>
+                    <span className={step >= 2 ? 'text-[#012d1d]' : ''}>Picked Up</span>
+                    <span className={step >= 3 ? 'text-[#012d1d]' : ''}>On the Road</span>
                     <span className={step >= 4 ? 'text-[#012d1d]' : ''}>Delivered</span>
-                    <span className={step >= 5 ? 'text-[#012d1d]' : ''}>Escrow Paid</span>
+                    <span className={step >= 5 ? 'text-[#012d1d]' : ''}>Paid</span>
                   </div>
 
                   <div className="w-full bg-[#e8e8e8] h-2 rounded-full overflow-hidden">
@@ -124,7 +130,7 @@ export const OrdersView: React.FC = () => {
                         className="px-3 py-1.5 bg-[#1b4332] text-white text-xs font-bold rounded-lg hover:bg-[#274e3d] flex items-center gap-1"
                       >
                         <span className="material-symbols-outlined text-[16px]">verified_user</span>
-                        <span>Sign Waybill & Release Escrow</span>
+                        <span>Confirm Goods OK & Release Payment</span>
                       </button>
                     )}
 
@@ -132,7 +138,7 @@ export const OrdersView: React.FC = () => {
                       onClick={() => setSelectedOrder(ord)}
                       className="px-3 py-1.5 bg-[#f3f3f3] border border-[#c1c8c2] text-[#012d1d] text-xs font-bold rounded-lg hover:bg-[#e8e8e8]"
                     >
-                      Digital Waybill
+                      Delivery Receipt
                     </button>
                   </div>
                 </div>
@@ -155,10 +161,10 @@ export const OrdersView: React.FC = () => {
 
             <div className="text-center pb-3 border-b border-[#e2e2e2]">
               <span className="text-[10px] font-bold uppercase tracking-wider bg-[#c1ecd4] text-[#002114] px-2.5 py-0.5 rounded-full">
-                Federal Ministry Official Digital Waybill
+                Electronic Delivery Receipt
               </span>
               <h3 className="font-heading font-bold text-lg text-[#012d1d] mt-1">
-                Waybill #{selectedOrder.trackingCode}
+                Receipt #{selectedOrder.trackingCode}
               </h3>
             </div>
 
@@ -173,14 +179,14 @@ export const OrdersView: React.FC = () => {
                   <span>{selectedOrder.quantity} MT</span>
                 </div>
                 <div className="flex justify-between text-[#717973]">
-                  <span>Escrow Value</span>
+                  <span>Total Value</span>
                   <span className="font-bold text-[#012d1d]">₦{selectedOrder.totalPrice.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="p-3 bg-[#f3f3f3] rounded-xl space-y-2">
                 <div className="flex justify-between items-center text-[#717973]">
-                  <span>Shipper / Seller</span>
+                  <span>Seller / Farmer</span>
                   <div className="flex items-center gap-1.5 font-bold text-[#1a1c1c]">
                     <img
                       src={getNigerianAvatar(selectedOrder.sellerName)}
@@ -191,15 +197,15 @@ export const OrdersView: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex justify-between text-[#717973]">
-                  <span>Origin Warehouse</span>
+                  <span>From (Pickup Location)</span>
                   <span>{selectedOrder.originState}</span>
                 </div>
                 <div className="flex justify-between text-[#717973]">
-                  <span>Destination Processing Hub</span>
+                  <span>To (Delivery Destination)</span>
                   <span>{selectedOrder.destinationState}</span>
                 </div>
                 <div className="flex justify-between items-center text-[#717973] pt-1 border-t border-[#e2e2e2]">
-                  <span>Assigned Driver</span>
+                  <span>Driver & Truck</span>
                   <div className="flex items-center gap-1.5 font-bold text-[#012d1d]">
                     <img
                       src={getNigerianAvatar(selectedOrder.transporterName || 'Ibrahim Logistics')}
@@ -212,18 +218,11 @@ export const OrdersView: React.FC = () => {
               </div>
             </div>
 
-            <div className="bg-[#1b4332] text-white p-3 rounded-xl text-center space-y-1">
-              <div className="text-[10px] uppercase font-bold text-[#86af99]">Digital Verification Hash</div>
-              <div className="font-mono text-[10px] text-[#c1ecd4] break-all">
-                AGRO-NG-WAYBILL-2026-X88921-VERIFIED-OK
-              </div>
-            </div>
-
             <button
               onClick={() => setSelectedOrder(null)}
               className="w-full py-2.5 bg-[#012d1d] text-white font-bold text-xs rounded-full hover:bg-[#1b4332]"
             >
-              Close Waybill
+              Close Receipt
             </button>
           </div>
         </div>

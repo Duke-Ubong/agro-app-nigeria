@@ -47,7 +47,8 @@ export const getNigerianAvatar = (
 ): string => {
   if (!identifier) return DEFAULT_NIGERIAN_MALE_AVATAR;
 
-  const lowerKey = identifier.toLowerCase();
+  const strIdentifier = String(identifier);
+  const lowerKey = strIdentifier.toLowerCase();
 
   // Detect gender preference if set to auto
   let isFemale = genderPreference === 'female';
@@ -84,8 +85,8 @@ export const getNigerianAvatar = (
 
   // Simple string hashing for deterministic avatar selection
   let hash = 0;
-  for (let i = 0; i < identifier.length; i++) {
-    hash = (hash << 5) - hash + identifier.charCodeAt(i);
+  for (let i = 0; i < strIdentifier.length; i++) {
+    hash = (hash << 5) - hash + strIdentifier.charCodeAt(i);
     hash |= 0;
   }
 

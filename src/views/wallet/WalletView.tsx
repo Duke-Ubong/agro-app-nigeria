@@ -49,11 +49,11 @@ export const WalletView: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <span className="text-xs font-bold uppercase tracking-wider text-[#86af99] bg-[#1b4332] px-3 py-1 rounded-full border border-[#86af99]/30">
-              National Agricultural Digital Wallet
+              My Farm Wallet
             </span>
-            <h1 className="font-heading font-bold text-2xl mt-2">Agro-Pay Escrow & Settlement</h1>
+            <h1 className="font-heading font-bold text-2xl mt-2">Farm Wallet & Safe Pay</h1>
             <p className="text-xs text-[#86af99]">
-              CBN-Compliant Digital Ledger for Farmers, Buyers, and Input Distributors
+              Protected payments for farmers, buyers, and farm supply shops
             </p>
           </div>
 
@@ -63,14 +63,14 @@ export const WalletView: React.FC = () => {
               className="h-11 px-5 bg-[#c1ecd4] text-[#002114] font-heading font-bold text-xs rounded-full hover:bg-[#a8dfc1] active:scale-95 transition-all shadow-sm flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[18px]">add_circle</span>
-              <span>Fund Wallet</span>
+              <span>Add Money</span>
             </button>
             <button
               onClick={() => setWithdrawModalOpen(true)}
               className="h-11 px-5 bg-[#1b4332] text-white font-heading font-bold text-xs rounded-full border border-[#86af99]/40 hover:bg-[#274e3d] active:scale-95 transition-all flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[18px]">account_balance</span>
-              <span>Withdraw Funds</span>
+              <span>Send to Bank</span>
             </button>
           </div>
         </div>
@@ -78,23 +78,23 @@ export const WalletView: React.FC = () => {
         {/* Balance Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#1b4332]">
           <div className="bg-[#1b4332] p-4 rounded-xl border border-[#274e3d] space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#86af99]">Available Liquid Balance</span>
+            <span className="text-[10px] font-bold uppercase text-[#86af99]">Available Money</span>
             <div className="font-heading font-bold text-3xl text-[#c1ecd4]">
               ₦{walletBalance.toLocaleString()}
             </div>
-            <p className="text-[10px] text-[#86af99]">Instant payout to all 24 Nigerian banks</p>
+            <p className="text-[10px] text-[#86af99]">Ready to withdraw to any Nigerian bank</p>
           </div>
 
           <div className="bg-[#1b4332] p-4 rounded-xl border border-[#274e3d] space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#86af99]">Locked Escrow Holdings</span>
+            <span className="text-[10px] font-bold uppercase text-[#86af99]">Money in Safe Hold (Escrow)</span>
             <div className="font-heading font-bold text-3xl text-[#c1ecd4]">₦12,500,000</div>
-            <p className="text-[10px] text-[#86af99]">4 Pending Produce Contracts</p>
+            <p className="text-[10px] text-[#86af99]">4 Pending Produce Orders</p>
           </div>
 
           <div className="bg-[#1b4332] p-4 rounded-xl border border-[#274e3d] space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#86af99]">Active Subsidy Vouchers</span>
+            <span className="text-[10px] font-bold uppercase text-[#86af99]">Government Discount Vouchers</span>
             <div className="font-heading font-bold text-3xl text-[#c1ecd4]">₦350,000</div>
-            <p className="text-[10px] text-[#86af99]">Federal Input Grant (50% Off Seeds)</p>
+            <p className="text-[10px] text-[#86af99]">50% Discount on Seeds & Fertilizer</p>
           </div>
         </div>
       </div>
@@ -102,16 +102,16 @@ export const WalletView: React.FC = () => {
       {/* Transaction History Table */}
       <div className="bg-white rounded-2xl border border-[#c1c8c2] p-5 space-y-4">
         <div className="flex justify-between items-center pb-3 border-b border-[#e2e2e2]">
-          <h3 className="font-heading font-bold text-base text-[#012d1d]">Ledger & Transaction History</h3>
-          <span className="text-xs text-[#717973]">Real-time NIBSS Verification</span>
+          <h3 className="font-heading font-bold text-base text-[#012d1d]">Money In & Money Out History</h3>
+          <span className="text-xs text-[#717973]">Instant Bank Verification</span>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
               <tr className="bg-[#f3f3f3] text-[#012d1d] font-bold border-b border-[#c1c8c2]">
-                <th className="p-3">Reference</th>
-                <th className="p-3">Description</th>
+                <th className="p-3">Receipt Code</th>
+                <th className="p-3">Details</th>
                 <th className="p-3">Date</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-right">Amount</th>
@@ -125,7 +125,7 @@ export const WalletView: React.FC = () => {
                   <td className="p-3 text-[#717973]">{new Date(tx.createdAt).toLocaleDateString()}</td>
                   <td className="p-3">
                     <span className="px-2 py-0.5 rounded bg-[#c1ecd4] text-[#002114] text-[10px] font-bold uppercase">
-                      {tx.status}
+                      {tx.status === 'completed' ? 'Successful' : tx.status}
                     </span>
                   </td>
                   <td
@@ -153,9 +153,9 @@ export const WalletView: React.FC = () => {
               <span className="material-symbols-outlined">close</span>
             </button>
 
-            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Fund Wallet via Bank Transfer</h3>
+            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Add Money via Bank Transfer</h3>
             <p className="text-xs text-[#414844]">
-              Transfer funds directly from any Nigerian bank to your dedicated AgroApp NIBSS Virtual Account:
+              Send money directly from your bank app or USSD to this account number:
             </p>
 
             <div className="p-3 bg-[#f3f3f3] rounded-xl space-y-1 text-xs border border-[#c1c8c2]">
@@ -164,7 +164,7 @@ export const WalletView: React.FC = () => {
                 <span className="font-bold text-[#012d1d]">Providus Bank / Wema Bank</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-[#717973]">Virtual Account No.</span>
+                <span className="text-[#717973]">Account Number</span>
                 <span className="font-mono font-bold text-sm text-[#012d1d]">9921839210</span>
               </div>
               <div className="flex justify-between">
@@ -175,7 +175,7 @@ export const WalletView: React.FC = () => {
 
             <form onSubmit={handleDeposit} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-[#1a1c1c] mb-1">Simulate Quick Top-up Amount (₦)</label>
+                <label className="block font-bold text-[#1a1c1c] mb-1">Enter Amount to Add (₦)</label>
                 <input
                   type="number"
                   required
@@ -190,7 +190,7 @@ export const WalletView: React.FC = () => {
                 type="submit"
                 className="w-full py-3 bg-[#012d1d] text-white font-bold text-xs rounded-full hover:bg-[#1b4332]"
               >
-                Confirm Instant Credit
+                Add Money to Wallet
               </button>
             </form>
           </div>
@@ -208,11 +208,11 @@ export const WalletView: React.FC = () => {
               <span className="material-symbols-outlined">close</span>
             </button>
 
-            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Withdraw Funds to Nigerian Bank</h3>
+            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Send Money to Your Bank</h3>
 
             <form onSubmit={handleWithdraw} className="space-y-3 text-xs">
               <div>
-                <label className="block font-bold text-[#1a1c1c] mb-1">Select Destination Bank</label>
+                <label className="block font-bold text-[#1a1c1c] mb-1">Choose Bank</label>
                 <select
                   value={bankAccount.bankName}
                   onChange={(e) => setBankAccount({ ...bankAccount, bankName: e.target.value })}
@@ -241,7 +241,7 @@ export const WalletView: React.FC = () => {
               </div>
 
               <div>
-                <label className="block font-bold text-[#1a1c1c] mb-1">Withdrawal Amount (₦)</label>
+                <label className="block font-bold text-[#1a1c1c] mb-1">Amount to Send (₦)</label>
                 <input
                   type="number"
                   required
@@ -251,7 +251,7 @@ export const WalletView: React.FC = () => {
                   className="w-full h-11 px-3 rounded-xl border border-[#717973] font-bold text-sm"
                 />
                 <p className="text-[10px] text-[#717973] mt-1">
-                  Available: ₦{walletBalance.toLocaleString()}
+                  Available in Wallet: ₦{walletBalance.toLocaleString()}
                 </p>
               </div>
 
@@ -259,7 +259,7 @@ export const WalletView: React.FC = () => {
                 type="submit"
                 className="w-full py-3 bg-[#012d1d] text-white font-bold text-xs rounded-full hover:bg-[#1b4332]"
               >
-                Withdraw to Bank Account
+                Send Money Now
               </button>
             </form>
           </div>

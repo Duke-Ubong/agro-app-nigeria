@@ -157,13 +157,13 @@ export const ProfileView: React.FC = () => {
       {/* Settings Form */}
       <div className="bg-white border border-[#c1c8c2] rounded-2xl p-6 space-y-5 shadow-xs">
         <h3 className="font-heading font-bold text-base text-[#012d1d] pb-2 border-b border-[#e2e2e2]">
-          App & Accessibility Settings
+          App Settings
         </h3>
 
         <form onSubmit={handleSave} className="space-y-4 text-xs">
           <div>
             <label className="block font-bold text-[#1a1c1c] mb-1">
-              Preferred Platform Language
+              Choose App Language
             </label>
             <select
               value={language}
@@ -185,11 +185,10 @@ export const ProfileView: React.FC = () => {
                 <span className="material-symbols-outlined text-[18px]">
                   signal_cellular_alt_1_bar
                 </span>
-                <span>Low Bandwidth & Data Saver Mode</span>
+                <span>Save Internet Data (Slow Network Mode)</span>
               </div>
               <p className="text-[11px] text-[#414844] mt-0.5">
-                Optimizes images and compressed data packets for 2G / 3G rural networks in remote
-                farming clusters.
+                Loads smaller images so the app works faster in villages and areas with weak 2G / 3G networks.
               </p>
             </div>
 
@@ -213,7 +212,7 @@ export const ProfileView: React.FC = () => {
               type="submit"
               className="h-11 px-6 bg-[#012d1d] text-white font-bold text-xs rounded-full hover:bg-[#1b4332] cursor-pointer"
             >
-              {isSaved ? 'Settings Saved ✓' : 'Save Preferences'}
+              {isSaved ? 'Settings Saved ✓' : 'Save Changes'}
             </button>
 
             <button
@@ -221,7 +220,7 @@ export const ProfileView: React.FC = () => {
               onClick={logout}
               className="h-11 px-6 bg-[#ba1a1a] text-white font-bold text-xs rounded-full hover:bg-[#93000a] cursor-pointer"
             >
-              Sign Out
+              Log Out
             </button>
           </div>
         </form>

@@ -23,9 +23,9 @@ export const MarketplaceView: React.FC = () => {
 
   const filteredListings = listings.filter((l) => {
     const matchesSearch =
-      l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.cropType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.locationState.toLowerCase().includes(searchTerm.toLowerCase());
+      (l.title || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+      (l.cropType || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+      (l.locationState || '').toLowerCase().includes((searchTerm || '').toLowerCase());
     const matchesCategory = selectedCategory === 'All' || l.category === selectedCategory;
     const matchesState = selectedState === 'All States' || l.locationState === selectedState;
     return matchesSearch && matchesCategory && matchesState;
@@ -44,9 +44,9 @@ export const MarketplaceView: React.FC = () => {
       <div className="bg-[#012d1d] text-white p-6 rounded-2xl shadow-sm border border-[#1b4332] space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h1 className="font-heading font-bold text-2xl">Nationwide Produce Marketplace</h1>
+            <h1 className="font-heading font-bold text-2xl">Produce & Farm Supplies Market</h1>
             <p className="text-xs text-[#86af99]">
-              Verified Grains, Tubers, Inputs & Processed Commodities directly from Nigerian Farmers & Cooperatives.
+              Buy and sell grains, tubers, seeds, fertilizer and farm goods safely across Nigeria.
             </p>
           </div>
           <button
@@ -54,7 +54,7 @@ export const MarketplaceView: React.FC = () => {
             className="h-10 px-4 bg-[#1b4332] hover:bg-[#274e3d] text-white text-xs font-bold rounded-full flex items-center gap-2 border border-[#86af99]/30 transition-colors shrink-0"
           >
             <span className="material-symbols-outlined text-[18px]">add_circle</span>
-            <span>Sell Produce</span>
+            <span>Sell My Produce</span>
           </button>
         </div>
 
@@ -266,15 +266,15 @@ export const MarketplaceView: React.FC = () => {
               {/* Total Summary */}
               <div className="p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2] space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span>Subtotal ({orderQuantity} units)</span>
+                  <span>Price ({orderQuantity} units)</span>
                   <span className="font-bold">₦{(selectedListing.price * orderQuantity).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[#717973]">
-                  <span>AgroApp Secure Escrow Fee (0.5%)</span>
+                  <span>Safe Payment Protection Fee (0.5%)</span>
                   <span>₦{((selectedListing.price * orderQuantity) * 0.005).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between font-heading font-bold text-sm text-[#012d1d] pt-2 border-t border-[#c1c8c2]">
-                  <span>Total Escrow Hold Amount</span>
+                  <span>Total Money to Hold</span>
                   <span>₦{((selectedListing.price * orderQuantity) * 1.005).toLocaleString()}</span>
                 </div>
               </div>
@@ -282,7 +282,7 @@ export const MarketplaceView: React.FC = () => {
               <div className="bg-[#1b4332] text-white p-3 rounded-xl text-xs flex items-start gap-2">
                 <span className="material-symbols-outlined text-[#c1ecd4] text-[18px]">verified_user</span>
                 <p className="text-[11px] text-[#86af99]">
-                  Funds are locked safely in Escrow until delivery is verified and waybill is signed off by buyer.
+                  Your money is held safely by AgroApp. The seller is only paid after your goods arrive and you check them.
                 </p>
               </div>
 
@@ -290,7 +290,7 @@ export const MarketplaceView: React.FC = () => {
                 type="submit"
                 className="w-full h-12 bg-[#012d1d] text-white font-heading font-bold text-sm rounded-full flex items-center justify-center gap-2 hover:bg-[#1b4332] active:scale-95 transition-all shadow-md"
               >
-                <span>Confirm Purchase & Lock Escrow</span>
+                <span>Confirm Order & Lock Safe Payment</span>
                 <span className="material-symbols-outlined text-[18px]">lock</span>
               </button>
             </form>
@@ -305,9 +305,9 @@ export const MarketplaceView: React.FC = () => {
             <div className="w-16 h-16 bg-[#c1ecd4] text-[#002114] rounded-full flex items-center justify-center mx-auto">
               <span className="material-symbols-outlined text-[36px]">check_circle</span>
             </div>
-            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Order Created & Escrow Locked!</h3>
+            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Order Placed Successfully!</h3>
             <p className="text-xs text-[#414844]">
-              Your purchase contract has been submitted to the seller and transporter route assigned.
+              Your order has been sent to the seller, and a driver has been notified to pick up the produce.
             </p>
             <button
               onClick={() => {
@@ -317,7 +317,7 @@ export const MarketplaceView: React.FC = () => {
               }}
               className="w-full py-3 bg-[#012d1d] text-white font-bold text-xs rounded-full hover:bg-[#1b4332]"
             >
-              Track Order Status →
+              See My Order Status →
             </button>
           </div>
         </div>

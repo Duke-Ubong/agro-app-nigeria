@@ -14,7 +14,7 @@ export const BottomNav: React.FC = () => {
   const pendingOrdersCount = orders.filter((o) => o.status === 'pending' || o.status === 'accepted').length;
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#f9f9f9] border-t border-[#c1c8c2] px-2 py-1 flex justify-around items-center h-16 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+    <nav className="md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[1440px] z-40 bg-[#f9f9f9] border-t border-x border-[#c1c8c2] px-2 py-1 flex justify-around items-center h-16 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
       {/* Home / Dashboard */}
       <button
         onClick={() => setActiveView('dashboard')}
