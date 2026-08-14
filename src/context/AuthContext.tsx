@@ -15,8 +15,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default to Farmer, can switch anytime
-  const [user, setUser] = useState<User | null>(INITIAL_USERS[0]);
+  // Default to Super Admin so the full administrative & platform owner capabilities are immediately active
+  const defaultAdmin = INITIAL_USERS.find((u) => u.role === 'super_admin') || INITIAL_USERS[0];
+  const [user, setUser] = useState<User | null>(defaultAdmin);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(false);
 
   const setRole = (role: UserRole) => {

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
+import { RoleSwitcher } from '../common/RoleSwitcher';
 import { AgroAppLogo } from '../common/AgroAppLogo';
 import { getNigerianAvatar } from '../../utils/avatarUtils';
 
@@ -80,15 +81,23 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
               onClick={() => setActiveView('dashboard')}
             />
             {isAdmin && (
-              <span className="text-[10px] font-bold bg-[#ba1a1a] text-white px-1.5 py-0.5 rounded uppercase self-start mt-1 shadow-xs">
-                Admin
-              </span>
+              <button
+                type="button"
+                onClick={() => setActiveView('admin')}
+                className="text-[10px] font-bold bg-[#012d1d] text-[#c1ecd4] hover:bg-[#1b4332] px-2 py-0.5 rounded-md uppercase self-center shadow-xs border border-[#1b4332] transition-colors cursor-pointer"
+                title="Go to National Admin Portal"
+              >
+                {isSuperAdmin ? 'Super Admin' : 'Admin Portal'}
+              </button>
             )}
           </div>
         </div>
 
         {/* Center/Right Actions */}
         <div className="flex items-center gap-2">
+          {/* Quick Role Switcher */}
+          <RoleSwitcher />
+
           <LanguageSwitcher />
 
           {/* Notifications Trigger */}

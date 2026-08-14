@@ -1,30 +1,30 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import { AdminGovernanceOverview } from '../admin/AdminGovernanceOverview';
-import { SuperAdminInfrastructure } from '../admin/SuperAdminInfrastructure';
-import { StateADPCommand } from '../admin/StateADPCommand';
-import { OperationsSupportDisputes } from '../admin/OperationsSupportDisputes';
-import { MinistryPolicyIntelligence } from '../admin/MinistryPolicyIntelligence';
-import { ComplianceAuditTrail } from '../admin/ComplianceAuditTrail';
+import { SuperAdminDashboard } from '../admin/SuperAdminDashboard';
+import { MinistryAdminDashboard } from '../admin/MinistryAdminDashboard';
+import { StateRegionalAdminDashboard } from '../admin/StateRegionalAdminDashboard';
+import { OperationsSupportDashboard } from '../admin/OperationsSupportDashboard';
+import { FinancePartnerAdminDashboard } from '../admin/FinancePartnerAdminDashboard';
+import { ComplianceAuditAdminDashboard } from '../admin/ComplianceAuditAdminDashboard';
 import { AdminUsersManagement } from '../admin/AdminUsersManagement';
 import { AdminBroadcastDesk } from '../admin/AdminBroadcastDesk';
 
 export const AdminPortal: React.FC = () => {
   const { role } = useAuth();
-  const { usersList, auditLogs, broadcasts, adminTab, setAdminTab, setActiveView } = useApp();
+  const { usersList, auditLogs, adminTab, setAdminTab, setActiveView } = useApp();
 
   type AdminTab =
-    | 'overview'
     | 'super_admin'
+    | 'ministry_policy'
     | 'state_adp'
     | 'operations'
-    | 'policy'
-    | 'compliance'
+    | 'finance_partner'
+    | 'compliance_audit'
     | 'users'
     | 'broadcasts';
 
-  const [activeTab, setActiveTabState] = useState<AdminTab>((adminTab as AdminTab) || 'overview');
+  const [activeTab, setActiveTabState] = useState<AdminTab>((adminTab as AdminTab) || 'super_admin');
 
   const handleTabChange = (tab: AdminTab) => {
     setActiveTabState(tab);
@@ -35,15 +35,14 @@ export const AdminPortal: React.FC = () => {
 
   const isSuperAdmin = role === 'super_admin';
   const isGovAdmin = role === 'gov_admin';
-  const isInstAdmin = role === 'institutional_admin';
 
   const tabList = [
-    { id: 'overview' as const, label: 'Executive Overview', icon: 'dashboard', badge: 'Live' },
-    { id: 'super_admin' as const, label: 'Infrastructure & Controls', icon: 'dns', badge: isSuperAdmin ? 'Super' : undefined },
-    { id: 'state_adp' as const, label: 'State ADP Command', icon: 'location_city' },
-    { id: 'operations' as const, label: 'Operations & Disputes', icon: 'support_agent' },
-    { id: 'policy' as const, label: 'Ministry & BOA Policy', icon: 'policy' },
-    { id: 'compliance' as const, label: 'Audit & AML Suite', icon: 'verified_user' },
+    { id: 'super_admin' as const, label: '1. Super Admin', icon: 'dns', badge: isSuperAdmin ? 'Platform' : undefined },
+    { id: 'ministry_policy' as const, label: '2. Ministry (FMAFS)', icon: 'policy', badge: 'Policy' },
+    { id: 'state_adp' as const, label: '3. State ADP Command', icon: 'location_city', badge: '36 States' },
+    { id: 'operations' as const, label: '4. Operations & KYC', icon: 'support_agent' },
+    { id: 'finance_partner' as const, label: '5. Finance & BOA', icon: 'payments', badge: '5% Loans' },
+    { id: 'compliance_audit' as const, label: '6. Compliance & NDPR', icon: 'verified_user' },
     { id: 'users' as const, label: 'User Registry', icon: 'group', badge: `${usersList.length}` },
     { id: 'broadcasts' as const, label: 'Broadcasts & SMS', icon: 'campaign' },
   ];
@@ -124,12 +123,12 @@ export const AdminPortal: React.FC = () => {
 
       {/* Active Tab View Rendering */}
       <div>
-        {activeTab === 'overview' && <AdminGovernanceOverview />}
-        {activeTab === 'super_admin' && <SuperAdminInfrastructure />}
-        {activeTab === 'state_adp' && <StateADPCommand />}
-        {activeTab === 'operations' && <OperationsSupportDisputes />}
-        {activeTab === 'policy' && <MinistryPolicyIntelligence />}
-        {activeTab === 'compliance' && <ComplianceAuditTrail />}
+        {activeTab === 'super_admin' && <SuperAdminDashboard />}
+        {activeTab === 'ministry_policy' && <MinistryAdminDashboard />}
+        {activeTab === 'state_adp' && <StateRegionalAdminDashboard />}
+        {activeTab === 'operations' && <OperationsSupportDashboard />}
+        {activeTab === 'finance_partner' && <FinancePartnerAdminDashboard />}
+        {activeTab === 'compliance_audit' && <ComplianceAuditAdminDashboard />}
         {activeTab === 'users' && <AdminUsersManagement />}
         {activeTab === 'broadcasts' && <AdminBroadcastDesk />}
       </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
 
 export const ROLE_LABELS: Record<UserRole, { title: string; subtitle: string; icon: string }> = {
@@ -15,7 +16,25 @@ export const ROLE_LABELS: Record<UserRole, { title: string; subtitle: string; ic
 
 export const RoleSwitcher: React.FC = () => {
   const { role, setRole } = useAuth();
+  const { setActiveView, setAdminTab } = useApp();
   const [isOpen, setIsOpen] = React.useState(false);
+
+  const handleRoleSelect = (r: UserRole) => {
+    setRole(r);
+    setIsOpen(false);
+    if (r === 'super_admin') {
+      setActiveView('admin');
+      if (setAdminTab) setAdminTab('super_admin');
+    } else if (r === 'gov_admin') {
+      setActiveView('admin');
+      if (setAdminTab) setAdminTab('ministry_policy');
+    } else if (r === 'institutional_admin') {
+      setActiveView('admin');
+      if (setAdminTab) setAdminTab('state_adp');
+    } else {
+      setActiveView('dashboard');
+    }
+  };
 
   return (
     <div className="relative">
@@ -46,10 +65,7 @@ export const RoleSwitcher: React.FC = () => {
               return (
                 <button
                   key={r}
-                  onClick={() => {
-                    setRole(r);
-                    setIsOpen(false);
-                  }}
+                  onClick={() => handleRoleSelect(r)}
                   className={`w-full text-left p-2 rounded-lg flex items-center gap-3 transition-colors ${
                     isSelected
                       ? 'bg-[#012d1d] text-white'

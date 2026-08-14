@@ -25,7 +25,7 @@ export interface DepartmentOption {
   title: string;
   subtitle: string;
   role: UserRole;
-  defaultTab: 'overview' | 'super_admin' | 'state_adp' | 'operations' | 'policy' | 'compliance' | 'users' | 'broadcasts';
+  defaultTab: 'super_admin' | 'ministry_policy' | 'state_adp' | 'operations' | 'finance_partner' | 'compliance_audit' | 'users' | 'broadcasts';
   icon: React.ComponentType<{ className?: string }>;
   accentColor?: string;
 }
@@ -52,7 +52,7 @@ export const AdminDepartmentSelection: React.FC = () => {
       title: 'Ministry Admin',
       subtitle: 'Strategic Policy & National Data',
       role: 'gov_admin',
-      defaultTab: 'policy',
+      defaultTab: 'ministry_policy',
       icon: Landmark,
     },
     {
@@ -76,7 +76,7 @@ export const AdminDepartmentSelection: React.FC = () => {
       title: 'Finance / Partner Admin',
       subtitle: 'Escrow & Financial Reconciliation',
       role: 'gov_admin',
-      defaultTab: 'compliance',
+      defaultTab: 'finance_partner',
       icon: CreditCard,
     },
     {
@@ -84,7 +84,7 @@ export const AdminDepartmentSelection: React.FC = () => {
       title: 'Compliance / Audit Admin',
       subtitle: 'Regulatory & Fraud Monitoring',
       role: 'super_admin',
-      defaultTab: 'compliance',
+      defaultTab: 'compliance_audit',
       icon: ShieldCheck,
     },
   ];
