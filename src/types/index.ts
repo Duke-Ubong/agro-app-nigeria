@@ -19,6 +19,7 @@ export interface User {
   state: string;
   lga?: string;
   address?: string;
+  language?: string | Language;
   verificationStatus: 'verified' | 'pending' | 'unverified';
   companyName?: string;
   cacNumber?: string;
@@ -89,8 +90,9 @@ export interface Transaction {
   type: 'credit' | 'debit' | 'escrow_hold' | 'escrow_release';
   amount: number;
   description: string;
-  category: 'Produce Sale' | 'Input Purchase' | 'Loan Disbursal' | 'Loan Repayment' | 'Freight Fee' | 'Wallet Top-up' | 'Withdrawal';
-  timestamp: string;
+  category?: 'Produce Sale' | 'Input Purchase' | 'Loan Disbursal' | 'Loan Repayment' | 'Freight Fee' | 'Wallet Top-up' | 'Withdrawal' | string;
+  timestamp?: string;
+  createdAt?: string;
   status: 'completed' | 'pending' | 'failed';
   reference: string;
 }
@@ -110,32 +112,42 @@ export interface LoanApplication {
   applicantState: string;
   amount: number;
   durationMonths: number;
+  tenureMonths?: number;
   purpose: string;
   collateral: string;
-  status: 'pre_approved' | 'pending' | 'approved' | 'rejected';
+  status: 'pre_approved' | 'pending' | 'approved' | 'rejected' | 'under_review';
   repaymentEstimate: number;
   interestRate: string;
   expectedRepaymentDate: string;
   createdAt: string;
+  appliedAt?: string;
 }
 
 export interface MarketPrice {
   id: string;
   crop: string;
+  cropTitle?: string;
+  marketName?: string;
   unit: string;
   priceNaira: number;
+  currentPrice?: number;
   changePercent: number;
+  priceChange?: string | number;
   trend: 'up' | 'down' | 'stable';
   topState: string;
+  state?: string;
 }
 
 export interface WeatherInfo {
   state: string;
+  lga?: string;
   tempCelsius: number;
+  temperatureC?: number;
   condition: string;
   humidityPercent: number;
   windSpeedKm: number;
   rainForecastPercent: number;
+  rainProbability?: number;
   advisoryText: string;
 }
 

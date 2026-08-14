@@ -12,6 +12,7 @@ import { SplashScreen } from './views/auth/SplashScreen';
 import { RoleSelection } from './views/auth/RoleSelection';
 import { RegistrationFlow } from './views/auth/RegistrationFlow';
 import { IdentityVerification } from './views/auth/IdentityVerification';
+import { AdminDepartmentSelection } from './views/admin/AdminDepartmentSelection';
 
 // Dashboards
 import { FarmerDashboard } from './views/dashboards/FarmerDashboard';
@@ -47,14 +48,15 @@ export const App: React.FC = () => {
   }
 
   // 2. Unauthenticated Onboarding or Fullscreen Auth View State
-  if (!user || activeView === 'splash' || activeView === 'role_selection') {
+  if (!user || activeView === 'splash' || activeView === 'role_selection' || activeView === 'admin_department_select') {
     return (
       <div className="min-h-screen bg-[#e6ece8] text-[#1a1c1c] flex flex-col font-body selection:bg-[#c1ecd4] selection:text-[#002114] justify-center items-center">
         <div className="w-full max-w-[1440px] min-h-screen bg-white shadow-2xl border-x border-[#c1c8c2]/40 flex flex-col relative overflow-hidden">
           {activeView === 'role_selection' && <RoleSelection />}
+          {activeView === 'admin_department_select' && <AdminDepartmentSelection />}
           {activeView === 'register' && <RegistrationFlow />}
           {activeView === 'verify_identity' && <IdentityVerification />}
-          {activeView !== 'role_selection' && activeView !== 'register' && activeView !== 'verify_identity' && <SplashScreen />}
+          {activeView !== 'role_selection' && activeView !== 'admin_department_select' && activeView !== 'register' && activeView !== 'verify_identity' && <SplashScreen />}
         </div>
       </div>
     );
@@ -87,6 +89,8 @@ export const App: React.FC = () => {
     switch (activeView) {
       case 'dashboard':
         return renderDashboard();
+      case 'admin':
+        return <AdminPortal />;
       case 'marketplace':
         return <MarketplaceView />;
       case 'create_listing':

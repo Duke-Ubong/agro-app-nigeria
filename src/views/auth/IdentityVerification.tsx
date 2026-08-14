@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 
 interface IdentityVerificationProps {
-  onComplete: () => void;
-  onSkip: () => void;
+  onComplete?: () => void;
+  onSkip?: () => void;
 }
 
-export const IdentityVerification: React.FC<IdentityVerificationProps> = ({ onComplete, onSkip }) => {
+export const IdentityVerification: React.FC<IdentityVerificationProps> = ({ onComplete: propOnComplete, onSkip: propOnSkip }) => {
   const { user, updateUser } = useAuth();
+  const { setActiveView } = useApp();
+  
+  const onComplete = propOnComplete || (() => setActiveView('dashboard'));
+  const onSkip = propOnSkip || (() => setActiveView('dashboard'));
+  
   const [ninNumber, setNinNumber] = useState(user.nin || '');
   const [cacNumber, setCacNumber] = useState(user.cacNumber || '');
   const [idUploaded, setIdUploaded] = useState(false);

@@ -34,7 +34,7 @@ interface AppContextType {
   transactions: Transaction[];
   walletTransactions: Transaction[];
   walletBalance: number;
-  addTransaction: (tx: Omit<Transaction, 'id' | 'timestamp' | 'reference'>) => void;
+  addTransaction: (tx: Partial<Transaction> & { type: Transaction['type']; amount: number; description: string }) => void;
   loans: LoanApplication[];
   applyForLoan: (loanData: Omit<LoanApplication, 'id' | 'createdAt' | 'status'>) => void;
   applyLoan: (loanData: Omit<LoanApplication, 'id' | 'createdAt' | 'status'>) => void;
@@ -59,6 +59,8 @@ interface AppContextType {
   extensionGuides: any[];
   activeView: string;
   setActiveView: (view: string) => void;
+  adminTab: string;
+  setAdminTab: (tab: string) => void;
   selectedStateFilter: string;
   setSelectedStateFilter: (state: string) => void;
 }
@@ -76,6 +78,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [language, setLanguage] = useState<Language>('en');
   const [lowBandwidthMode, setLowBandwidthMode] = useState<boolean>(false);
   const [activeView, setActiveView] = useState<string>('splash');
+  const [adminTab, setAdminTab] = useState<string>('overview');
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>('All States');
 
   const addListing = (listingData: Omit<Listing, 'id' | 'createdAt' | 'rating'>) => {
@@ -160,12 +163,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addTransaction = (txData: Omit<Transaction, 'id' | 'timestamp' | 'reference'>) => {
+  const addTransaction = (txData: Partial<Transaction> & { type: Transaction['type']; amount: number; description: string }) => {
     const newTx: Transaction = {
+      userId: txData.userId || 'usr_current',
+      category: txData.category || 'Produce Sale',
+      status: txData.status || 'completed',
       ...txData,
-      id: `tx_${Date.now().toString().slice(-4)}`,
-      timestamp: new Date().toISOString(),
-      reference: `REF-${Math.floor(100000 + Math.random() * 900000)}`,
+      id: txData.id || `tx_${Date.now().toString().slice(-4)}`,
+      timestamp: txData.timestamp || txData.createdAt || new Date().toISOString(),
+      createdAt: txData.createdAt || txData.timestamp || new Date().toISOString(),
+      reference: txData.reference || `REF-${Math.floor(100000 + Math.random() * 900000)}`,
     };
     setTransactions((prev) => [newTx, ...prev]);
   };
@@ -280,6 +287,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         extensionGuides: EXTENSION_GUIDES,
         activeView,
         setActiveView,
+        adminTab,
+        setAdminTab,
         selectedStateFilter,
         setSelectedStateFilter,
       }}

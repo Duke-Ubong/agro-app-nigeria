@@ -6,7 +6,20 @@ export const CreateListingView: React.FC = () => {
   const { user } = useAuth();
   const { createListing, setActiveView } = useApp();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    cropType: string;
+    category: 'Grains' | 'Tubers' | 'Vegetables' | 'Fruits' | 'Inputs' | 'Processed';
+    price: number;
+    unit: string;
+    availableQuantity: number;
+    minOrder: number;
+    locationState: string;
+    description: string;
+    imageUrl: string;
+    moistureContent: string;
+    grade: string;
+  }>({
     title: '',
     cropType: 'Maize',
     category: 'Grains',
@@ -34,15 +47,17 @@ export const CreateListingView: React.FC = () => {
         category: formData.category,
         price: Number(formData.price),
         unit: formData.unit,
+        quantity: Number(formData.availableQuantity),
         availableQuantity: Number(formData.availableQuantity),
         minOrder: Number(formData.minOrder),
         locationState: formData.locationState,
+        locationLga: user.lga || 'Central',
         description: formData.description || 'High quality harvest sourced directly from smallholder farm clusters.',
         imageUrl: formData.imageUrl,
         sellerId: user.id,
         sellerName: user.name,
+        sellerRole: user.role,
         sellerVerified: user.verificationStatus === 'verified',
-        rating: 4.9,
         moistureContent: formData.moistureContent,
         grade: formData.grade,
       });
@@ -87,7 +102,7 @@ export const CreateListingView: React.FC = () => {
             <label className="block font-bold text-[#1a1c1c] mb-1">Type of Crop or Item</label>
             <select
               value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value as any })}
               className="w-full h-11 px-3 rounded-xl border border-[#717973] font-bold"
             >
               <option value="Grains">Grains (Maize, Rice, Sorghum)</option>

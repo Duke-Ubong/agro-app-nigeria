@@ -267,9 +267,9 @@ export const AdvisoryView: React.FC = () => {
   }>({ status: null, pestName: '', confidence: 0, description: '', treatment: '' });
 
   // Cargo Value Calculator states
-  const [cargoCrop, setCargoCrop] = useState(marketPrices[0]?.cropTitle || 'Maize');
+  const [cargoCrop, setCargoCrop] = useState(marketPrices[0]?.cropTitle || marketPrices[0]?.crop || 'Maize');
   const [cargoWeight, setCargoWeight] = useState(50); // bags
-  const [cargoMarket, setCargoMarket] = useState(marketPrices[0]?.marketName || 'Dawanau Hub, Kano');
+  const [cargoMarket, setCargoMarket] = useState(marketPrices[0]?.marketName || `${marketPrices[0]?.topState || 'Kano'} Central Market`);
 
   // Audio simulator loop
   useEffect(() => {
@@ -388,8 +388,9 @@ export const AdvisoryView: React.FC = () => {
   const expectedYieldMT = (sizeInHectares * (selectedCrop === 'Maize' ? 4.5 : selectedCrop === 'Cassava' ? 24 : selectedCrop === 'Rice' ? 5.2 : selectedCrop === 'Yam' ? 16 : 2.2)).toFixed(1);
 
   // Wholesale Grains Index Lookup
-  const activeMarketPrice = marketPrices.find((m) => (m.cropTitle || '').toLowerCase().includes((cargoCrop || '').toLowerCase())) || marketPrices[0];
-  const cargoEstValue = activeMarketPrice ? activeMarketPrice.currentPrice * cargoWeight : 0;
+  const activeMarketPrice = marketPrices.find((m) => ((m.cropTitle || m.crop) || '').toLowerCase().includes((cargoCrop || '').toLowerCase())) || marketPrices[0];
+  const activePriceValue = activeMarketPrice ? (activeMarketPrice.currentPrice || activeMarketPrice.priceNaira || 0) : 0;
+  const cargoEstValue = activePriceValue * cargoWeight;
 
   return (
     <div className="space-y-6">
@@ -444,13 +445,13 @@ export const AdvisoryView: React.FC = () => {
               </div>
               <div>
                 <div className="font-heading font-bold text-xl text-[#c1ecd4] flex items-center gap-2">
-                  <span>{weather.temperatureC}°C</span>
+                  <span>{weather.temperatureC ?? weather.tempCelsius ?? 29}°C</span>
                   <span className="text-xs font-medium text-white/90 bg-[#012d1d] px-2 py-0.5 rounded-full">
                     {weather.condition}
                   </span>
                 </div>
                 <div className="text-[11px] text-[#86af99] font-medium">
-                  State: <strong className="text-white">{weather.state}</strong> • LGA: <strong className="text-white">{weather.lga}</strong> • Chance of Rain: <strong className="text-white">{weather.rainProbability}%</strong>
+                  State: <strong className="text-white">{weather.state}</strong> • LGA: <strong className="text-white">{weather.lga || 'National Central'}</strong> • Chance of Rain: <strong className="text-white">{weather.rainProbability ?? weather.rainForecastPercent ?? 15}%</strong>
                 </div>
               </div>
             </div>
@@ -1066,35 +1067,44 @@ export const AdvisoryView: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {marketPrices.map((mp) => (
-                <div key={mp.id} className="p-3.5 bg-[#f9f9f9] border border-[#e2e2e2] rounded-xl space-y-2">
-                  <div className="flex justify-between items-start font-bold text-xs">
-                    <div>
-                      <span className="text-sm text-[#012d1d]">{mp.cropTitle}</span>
-                      <span className="block text-[10px] text-[#717973] font-medium mt-0.5">{mp.marketName}</span>
+              {marketPrices.map((mp) => {
+                const title = mp.cropTitle || mp.crop;
+                const market = mp.marketName || `${mp.topState || 'Central'} Market`;
+                const price = mp.currentPrice || mp.priceNaira || 0;
+                const stateName = mp.state || mp.topState;
+                const changeStr = mp.priceChange != null ? String(mp.priceChange) : (mp.changePercent >= 0 ? `+${mp.changePercent}%` : `${mp.changePercent}%`);
+                const isPositive = changeStr.startsWith('+');
+
+                return (
+                  <div key={mp.id} className="p-3.5 bg-[#f9f9f9] border border-[#e2e2e2] rounded-xl space-y-2">
+                    <div className="flex justify-between items-start font-bold text-xs">
+                      <div>
+                        <span className="text-sm text-[#012d1d]">{title}</span>
+                        <span className="block text-[10px] text-[#717973] font-medium mt-0.5">{market}</span>
+                      </div>
+
+                      <div className="text-right">
+                        <span className="text-sm font-black text-[#012d1d]">
+                          ₦{price.toLocaleString()}
+                        </span>
+                        <span className="block text-[10px] text-[#717973] font-medium mt-0.5">/ {mp.unit}</span>
+                      </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-sm font-black text-[#012d1d]">
-                        ₦{mp.currentPrice.toLocaleString()}
+                    <div className="flex justify-between items-center text-[10px] pt-2 border-t border-[#e2e2e2]">
+                      <span className="text-[#717973] font-medium">{stateName} State</span>
+                      <span className={`font-extrabold flex items-center gap-0.5 ${
+                        isPositive ? 'text-[#16a34a]' : 'text-[#ba1a1a]'
+                      }`}>
+                        <span className="material-symbols-outlined text-[12px]">
+                          {isPositive ? 'trending_up' : 'trending_down'}
+                        </span>
+                        <span>{changeStr}</span>
                       </span>
-                      <span className="block text-[10px] text-[#717973] font-medium mt-0.5">/ {mp.unit}</span>
                     </div>
                   </div>
-
-                  <div className="flex justify-between items-center text-[10px] pt-2 border-t border-[#e2e2e2]">
-                    <span className="text-[#717973] font-medium">{mp.state} State</span>
-                    <span className={`font-extrabold flex items-center gap-0.5 ${
-                      mp.priceChange.startsWith('+') ? 'text-[#16a34a]' : 'text-[#ba1a1a]'
-                    }`}>
-                      <span className="material-symbols-outlined text-[12px]">
-                        {mp.priceChange.startsWith('+') ? 'trending_up' : 'trending_down'}
-                      </span>
-                      <span>{mp.priceChange}</span>
-                    </span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -1149,7 +1159,7 @@ export const AdvisoryView: React.FC = () => {
                   ₦{cargoEstValue.toLocaleString()}
                 </div>
                 <p className="text-[10px] text-[#717973] font-medium">
-                  Based on wholesale benchmark of ₦{activeMarketPrice?.currentPrice.toLocaleString() || '24,000'} per {activeMarketPrice?.unit || 'bag'}.
+                  Based on wholesale benchmark of ₦{activePriceValue.toLocaleString() || '24,000'} per {activeMarketPrice?.unit || 'bag'}.
                 </p>
               </div>
 

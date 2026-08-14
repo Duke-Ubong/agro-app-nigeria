@@ -19,13 +19,19 @@ export const CreditView: React.FC = () => {
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
     applyLoan({
-      farmerId: user.id,
+      applicantId: user.id,
+      applicantName: user.name,
+      applicantRole: user.role,
+      applicantState: user.state,
       amount: requestedAmount,
-      interestRate: 5,
+      durationMonths: tenureMonths,
       tenureMonths,
+      interestRate: '5%',
       purpose,
-      status: 'under_review',
-      repaymentSchedule: [],
+      collateral: 'Farm Yield Guarantee',
+      repaymentEstimate: monthlyRepayment,
+      expectedRepaymentDate: new Date(Date.now() + tenureMonths * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      appliedAt: new Date().toISOString(),
     });
     setIsSuccessModal(true);
   };
@@ -165,14 +171,14 @@ export const CreditView: React.FC = () => {
                     <span className="text-[#012d1d]">₦{ln.amount.toLocaleString()}</span>
                   </div>
                   <div className="text-[11px] text-[#717973]">
-                    Pay Back In: {ln.tenureMonths} Months • Interest: {ln.interestRate}%
+                    Pay Back In: {ln.durationMonths || ln.tenureMonths || 6} Months • Interest: {ln.interestRate}
                   </div>
                   <div className="pt-1 flex justify-between items-center">
                     <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#ffdeac] text-[#281900]">
-                      {ln.status === 'under_review' ? 'Under Review' : ln.status.replace('_', ' ')}
+                      {ln.status === 'under_review' || ln.status === 'pending' ? 'Under Review' : ln.status.replace('_', ' ')}
                     </span>
                     <span className="text-[10px] text-[#717973]">
-                      Date: {new Date(ln.appliedAt).toLocaleDateString()}
+                      Date: {new Date(ln.appliedAt || ln.createdAt || Date.now()).toLocaleDateString()}
                     </span>
                   </div>
                 </div>

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
 import { ROLE_LABELS } from '../../components/common/RoleSwitcher';
 import { getNigerianAvatar } from '../../utils/avatarUtils';
 
 interface RegistrationFlowProps {
-  selectedRole: UserRole;
-  onComplete: () => void;
-  onBack: () => void;
+  selectedRole?: UserRole;
+  onComplete?: () => void;
+  onBack?: () => void;
 }
 
 const NIGERIAN_STATES = [
@@ -22,11 +23,16 @@ const NIGERIAN_STATES = [
 ];
 
 export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({
-  selectedRole,
-  onComplete,
-  onBack,
+  selectedRole: propRole,
+  onComplete: propOnComplete,
+  onBack: propOnBack,
 }) => {
-  const { updateUser, loginRole } = useAuth();
+  const { user, updateUser, loginRole } = useAuth();
+  const { setActiveView } = useApp();
+  
+  const selectedRole: UserRole = propRole || user.role || 'farmer';
+  const onComplete = propOnComplete || (() => setActiveView('dashboard'));
+  const onBack = propOnBack || (() => setActiveView('role_selection'));
   const info = ROLE_LABELS[selectedRole];
 
   const [formData, setFormData] = useState({

@@ -103,7 +103,11 @@ export const RoleSelection: React.FC<RoleSelectionProps> = ({ onSelectRole, onBa
       onSelectRole(selectedRole);
     }
 
-    setActiveView('dashboard');
+    if (selectedRole === 'super_admin') {
+      setActiveView('admin_department_select');
+    } else {
+      setActiveView('dashboard');
+    }
   };
 
   const handleGoBack = () => {
