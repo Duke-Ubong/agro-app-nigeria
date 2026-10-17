@@ -15,21 +15,39 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default directly to Farmer Abebe Usman to go straight into the app without registration
-  const [user, setUser] = useState<User>(INITIAL_USERS[0]);
+  // Default to null on fresh visits so Intro and Role Selection display first
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('agro_user_role');
+        if (saved) {
+          const match = INITIAL_USERS.find((u) => u.role === saved);
+          if (match) return match;
+        }
+      }
+    } catch (e) {
+      // localStorage may fail in restricted sandboxes
+    }
+    return null;
+  });
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(false);
 
   const setRole = (role: UserRole) => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('agro_user_role', role);
+      }
+    } catch (e) {}
     const match = INITIAL_USERS.find((u) => u.role === role);
     if (match) {
       setUser(match);
     } else {
-      setUser((prev) => ({ ...prev, role }));
+      setUser((prev) => (prev ? { ...prev, role } : { ...INITIAL_USERS[0], role }));
     }
   };
 
   const updateUser = (updates: Partial<User>) => {
-    setUser((prev) => ({ ...prev, ...updates }));
+    setUser((prev) => (prev ? { ...prev, ...updates } : null));
   };
 
   const loginRole = (role: UserRole) => {
@@ -37,8 +55,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    // Reset to default user instead of blocking on registration screens
-    setUser(INITIAL_USERS[0]);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('agro_user_role');
+      }
+    } catch (e) {}
+    setUser(null);
   };
 
   return (

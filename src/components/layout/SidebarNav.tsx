@@ -75,7 +75,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
       case 'institutional_admin':
         return [
           { id: 'admin', label: 'Executive Portal', icon: 'admin_panel_settings', badge: 'Admin' },
-          { id: 'dashboard', label: 'Platform Analytics', icon: 'analytics' },
+          { id: 'dashboard', label: 'Agro-Chain Analytics', icon: 'analytics', badge: '36 States Live' },
           { id: 'marketplace', label: 'Market Oversight', icon: 'policy', badge: `${listings.length}` },
           { id: 'wallet', label: 'Financial Audit', icon: 'account_balance_wallet' },
           { id: 'profile', label: 'Admin Profile', icon: 'shield_person' },

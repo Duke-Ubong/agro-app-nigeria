@@ -55,17 +55,37 @@ const ROLE_OPTIONS = [
     icon: 'local_shipping',
     iconBg: 'bg-[#f3f4f6]',
     iconColor: 'text-[#374151]',
-    pills: []
+    pills: ['Waybill Tracking', 'Fleet Loads', 'Fast Transit']
+  },
+  {
+    id: 'gov_admin' as UserRole,
+    title: 'Gov Regulator Admin',
+    subtitle: 'FEDERAL MINISTRY (FMAFS)',
+    description: 'Monitor strategic grain reserves, food inflation corridors, national food buffer, and subsidies.',
+    icon: 'policy',
+    iconBg: 'bg-[#e0f2fe]',
+    iconColor: 'text-[#0369a1]',
+    pills: ['Grain Reserves', 'Price Corridor', 'Cadre Harmonisé']
+  },
+  {
+    id: 'institutional_admin' as UserRole,
+    title: 'Institutional Admin',
+    subtitle: 'STATE AG DEV PROGRAMME (ADP)',
+    description: 'State-level farmer extension services, local voucher allocation, and harvest monitoring.',
+    icon: 'domain',
+    iconBg: 'bg-[#ede9fe]',
+    iconColor: 'text-[#6d28d9]',
+    pills: ['Extension Work', 'State Subsidies', 'Cluster Verification']
   },
   {
     id: 'super_admin' as UserRole,
     title: 'System Administrator',
-    subtitle: 'MINISTRY / PLATFORM ADMIN',
-    description: 'Platform oversight, farmer verification, subsidies distribution, and analytics.',
+    subtitle: 'PLATFORM GOVERNANCE',
+    description: 'Platform oversight, farmer identity verification, security logs, and national analytics.',
     icon: 'admin_panel_settings',
     iconBg: 'bg-[#fee2e2]',
     iconColor: 'text-[#b91c1c]',
-    pills: []
+    pills: ['Identity KYC', 'System Audit', 'API Governance']
   }
 ];
 

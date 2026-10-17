@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
+import { AgroChainObservatory } from './AgroChainObservatory';
 
 export const AdminPortal: React.FC = () => {
   const { role } = useAuth();
@@ -74,134 +75,45 @@ export const AdminPortal: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex bg-[#1b4332] p-1 rounded-xl text-xs font-bold text-[#86af99]">
+        <div className="flex bg-[#1b4332] p-1 rounded-xl text-xs font-bold text-[#86af99] overflow-x-auto no-scrollbar">
           <button
             onClick={() => setActiveTab('overview')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
+            className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'overview' ? 'bg-[#012d1d] text-white shadow-xs' : 'hover:text-white'
             }`}
           >
-            Analytics
+            <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-ping" />
+            <span>Agro-Chain Observatory</span>
           </button>
           <button
             onClick={() => setActiveTab('users')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
+            className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
               activeTab === 'users' ? 'bg-[#012d1d] text-white shadow-xs' : 'hover:text-white'
             }`}
           >
-            User Roles ({usersList.length})
+            Participants Directory ({usersList.length})
           </button>
           <button
             onClick={() => setActiveTab('broadcasts')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
+            className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
               activeTab === 'broadcasts' ? 'bg-[#012d1d] text-white shadow-xs' : 'hover:text-white'
             }`}
           >
-            Broadcasts
+            Regulatory Directives
           </button>
           <button
             onClick={() => setActiveTab('audit')}
-            className={`px-3 py-1.5 rounded-lg transition-colors ${
+            className={`px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ${
               activeTab === 'audit' ? 'bg-[#012d1d] text-white shadow-xs' : 'hover:text-white'
             }`}
           >
-            Audit Logs
+            NDPR & Audit Logs
           </button>
         </div>
       </div>
 
-      {/* Tab 1: Overview Analytics */}
-      {activeTab === 'overview' && (
-        <div className="space-y-6">
-          {/* Key Platform Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white border border-[#c1c8c2] p-4 rounded-xl space-y-1">
-              <span className="text-[10px] font-bold uppercase text-[#717973]">Registered Farmers & Coops</span>
-              <div className="font-heading font-bold text-2xl text-[#012d1d]">142,850 Users</div>
-              <span className="text-[10px] text-[#012d1d] font-bold"> Across 36 States + FCT</span>
-            </div>
-
-            <div className="bg-white border border-[#c1c8c2] p-4 rounded-xl space-y-1">
-              <span className="text-[10px] font-bold uppercase text-[#717973]">Active Trade Volume</span>
-              <div className="font-heading font-bold text-2xl text-[#012d1d]">₦3.85 Billion</div>
-              <span className="text-[10px] text-[#012d1d] font-bold">+18.4% this quarter</span>
-            </div>
-
-            <div className="bg-white border border-[#c1c8c2] p-4 rounded-xl space-y-1">
-              <span className="text-[10px] font-bold uppercase text-[#717973]">Federal Credit Disbursed</span>
-              <div className="font-heading font-bold text-2xl text-[#012d1d]">₦1.20 Billion</div>
-              <span className="text-[10px] text-[#012d1d] font-bold">5% Subsidized Agronomy Rate</span>
-            </div>
-
-            <div className="bg-white border border-[#c1c8c2] p-4 rounded-xl space-y-1">
-              <span className="text-[10px] font-bold uppercase text-[#717973]">Total Food Commodity Moved</span>
-              <div className="font-heading font-bold text-2xl text-[#012d1d]">48,500 Tonnes</div>
-              <span className="text-[10px] text-[#012d1d] font-bold">Yam, Maize, Cassava, Rice</span>
-            </div>
-          </div>
-
-          {/* Regional Distribution & Subsidy Progress */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-[#c1c8c2] p-4 space-y-3">
-              <h3 className="font-heading font-bold text-sm text-[#012d1d] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px]">map</span>
-                <span>Top Regional Commodity Production</span>
-              </h3>
-              <div className="space-y-2">
-                <div>
-                  <div className="flex justify-between text-xs font-bold text-[#1a1c1c] mb-1">
-                    <span>North Central (Benue, Kaduna, Niger, Plateau)</span>
-                    <span>18,400 MT</span>
-                  </div>
-                  <div className="w-full bg-[#e8e8e8] h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#012d1d] h-full w-[75%]" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs font-bold text-[#1a1c1c] mb-1">
-                    <span>North West (Kano, Katsina, Zaria)</span>
-                    <span>14,200 MT</span>
-                  </div>
-                  <div className="w-full bg-[#e8e8e8] h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#1b4332] h-full w-[60%]" />
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs font-bold text-[#1a1c1c] mb-1">
-                    <span>South West (Ogun, Ondo, Oyo)</span>
-                    <span>9,800 MT</span>
-                  </div>
-                  <div className="w-full bg-[#e8e8e8] h-2 rounded-full overflow-hidden">
-                    <div className="bg-[#86af99] h-full w-[45%]" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-[#c1c8c2] p-4 space-y-3">
-              <h3 className="font-heading font-bold text-sm text-[#012d1d] flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px]">assignment_turned_in</span>
-                <span>Input Subsidy Voucher Allocation</span>
-              </h3>
-              <div className="p-3 bg-[#f3f3f3] rounded-lg border border-[#e2e2e2] space-y-2 text-xs">
-                <div className="flex justify-between font-bold text-[#012d1d]">
-                  <span>Fertilizer 50% Subsidies</span>
-                  <span>500,000 Vouchers Issued</span>
-                </div>
-                <p className="text-[#414844] text-[11px]">
-                  Directly redeemed at registered NAFDAC-certified supplier depots across 36 states.
-                </p>
-                <div className="pt-2 border-t border-[#c1c8c2] flex justify-between font-semibold text-[10px] text-[#717973]">
-                  <span>Vouchers Redeemed: 382,410</span>
-                  <span>Remaining Budget: ₦2.4B</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Tab 1: Agro-Chain Intelligence & Regulatory Decision Observatory */}
+      {activeTab === 'overview' && <AgroChainObservatory />}
 
       {/* Tab 2: User Role Management */}
       {activeTab === 'users' && (

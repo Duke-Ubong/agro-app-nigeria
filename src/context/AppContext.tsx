@@ -76,7 +76,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [usersList, setUsersList] = useState<User[]>(INITIAL_USERS);
   const [language, setLanguage] = useState<Language>('en');
   const [lowBandwidthMode, setLowBandwidthMode] = useState<boolean>(false);
-  const [activeView, setActiveView] = useState<string>('dashboard');
+  const [activeView, setActiveView] = useState<string>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash.toLowerCase();
+        if (hash === '#roles' || hash === '#role_selection' || hash === '#role') return 'role_selection';
+        if (hash === '#splash' || hash === '#intro') return 'splash';
+        const saved = localStorage.getItem('agro_user_role');
+        if (saved) return 'dashboard';
+      }
+    } catch (e) {}
+    return 'splash';
+  });
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>('All States');
 
   const addListing = (listingData: Omit<Listing, 'id' | 'createdAt' | 'rating'>) => {

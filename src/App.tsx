@@ -34,6 +34,23 @@ export const App: React.FC = () => {
   const { user, isAuthLoading, loginRole } = useAuth();
   const { activeView, setActiveView } = useApp();
 
+  // Synchronize URL hash for direct links (e.g. #roles or #intro)
+  React.useEffect(() => {
+    const handleHash = () => {
+      try {
+        const hash = window.location.hash.toLowerCase();
+        if (hash === '#roles' || hash === '#role_selection' || hash === '#role') {
+          setActiveView('role_selection');
+        } else if (hash === '#splash' || hash === '#intro') {
+          setActiveView('splash');
+        }
+      } catch (e) {}
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [setActiveView]);
+
   // 1. Loading state
   if (isAuthLoading) {
     return (
@@ -48,17 +65,6 @@ export const App: React.FC = () => {
 
   // 2. Unauthenticated Onboarding State (Direct Role Entry - No Registration forms)
   if (!user) {
-    if (activeView === 'splash') {
-      return (
-        <SplashScreen
-          onGetStarted={() => setActiveView('role_selection')}
-          onLogin={() => {
-            loginRole('farmer');
-            setActiveView('dashboard');
-          }}
-        />
-      );
-    }
     if (activeView === 'role_selection') {
       return (
         <RoleSelection
@@ -111,6 +117,23 @@ export const App: React.FC = () => {
   // 4. Render Active View
   const renderActiveView = () => {
     switch (activeView) {
+      case 'splash':
+        return (
+          <SplashScreen
+            onGetStarted={() => setActiveView('role_selection')}
+            onLogin={() => setActiveView('dashboard')}
+          />
+        );
+      case 'role_selection':
+        return (
+          <RoleSelection
+            onSelectRole={(role) => {
+              loginRole(role);
+              setActiveView('dashboard');
+            }}
+            onBack={() => setActiveView('dashboard')}
+          />
+        );
       case 'dashboard':
         return renderDashboard();
       case 'marketplace':

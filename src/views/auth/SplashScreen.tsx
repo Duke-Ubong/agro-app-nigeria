@@ -1,48 +1,63 @@
 import React from 'react';
+import agritechTabletImg from '../../assets/images/african_agritech_tablet_1791954606275.jpg';
+import droneFarmingImg from '../../assets/images/african_drone_farming_1791954607666.jpg';
+import smartGreenhouseImg from '../../assets/images/african_smart_greenhouse_1791954607562.jpg';
+import digitalMarketImg from '../../assets/images/african_digital_market_1791954607959.jpg';
 
 interface SplashScreenProps {
   onGetStarted: () => void;
   onLogin: () => void;
 }
 
-  const slides = [
-    {
-      image: '/src/assets/images/african_agritech_tablet_1791954606275.jpg',
-      badge: 'Smart Agronomy & IoT Telemetry',
-      badgeIcon: 'sensors',
-      title: 'Precision Farm Advisory',
-      description: 'Satellite & field sensors delivering localized soil data to smallholders across Nigeria.',
-      ticker: 'NG Maize ₦480k/T • Soil Moisture 68%',
-      alt: 'African agronomist using digital tablet and solar telemetry in maize field',
-    },
-    {
-      image: '/src/assets/images/african_drone_farming_1791954607666.jpg',
-      badge: 'Aerial Drone Survey & Mapping',
-      badgeIcon: 'flight',
-      title: 'Multispectral Crop Health',
-      description: 'Early pest and drought detection across grain belts in Kaduna, Niger and Benue.',
-      ticker: 'Paddy Rice ₦520k/T • Drone Scan Active',
-      alt: 'African agricultural engineer operating monitoring drone over golden harvest fields',
-    },
-    {
-      image: '/src/assets/images/african_smart_greenhouse_1791954607562.jpg',
-      badge: 'Climate-Smart Hydroponics',
-      badgeIcon: 'psychiatry',
-      title: 'Controlled Environment Farming',
-      description: 'Automated solar irrigation and micro-climate regulation for high-yield horticulture.',
-      ticker: 'Bell Peppers ₦18k/Crate • Zone 3 Online',
-      alt: 'African female scientist monitoring hydroponic produce in modern smart greenhouse',
-    },
-    {
-      image: '/src/assets/images/african_digital_market_1791954607959.jpg',
-      badge: 'Digital Weighing & Trade Hubs',
-      badgeIcon: 'qr_code_scanner',
-      title: 'Real-Time Commodity Offtake',
-      description: 'Mobile digital payments, electronic scale manifests, and verified cooperative offtake.',
-      ticker: 'Soybeans ₦610k/T • Digital Trade Hub',
-      alt: 'African cooperative farmers and traders using digital devices at harvest collection hub',
-    },
-  ];
+const FALLBACK_IMAGES = [
+  'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1586771107445-d3ca888129ff?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=800&auto=format&fit=crop&q=80',
+  'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80',
+];
+
+const slides = [
+  {
+    image: agritechTabletImg || '/images/african_agritech_tablet_1791954606275.jpg',
+    fallback: FALLBACK_IMAGES[0],
+    badge: 'Smart Agronomy & IoT Telemetry',
+    badgeIcon: 'sensors',
+    title: 'Precision Farm Advisory',
+    description: 'Satellite & field sensors delivering localized soil data to smallholders across Nigeria.',
+    ticker: 'NG Maize ₦480k/T • Soil Moisture 68%',
+    alt: 'African agronomist using digital tablet and solar telemetry in maize field',
+  },
+  {
+    image: droneFarmingImg || '/images/african_drone_farming_1791954607666.jpg',
+    fallback: FALLBACK_IMAGES[1],
+    badge: 'Aerial Drone Survey & Mapping',
+    badgeIcon: 'flight',
+    title: 'Multispectral Crop Health',
+    description: 'Early pest and drought detection across grain belts in Kaduna, Niger and Benue.',
+    ticker: 'Paddy Rice ₦520k/T • Drone Scan Active',
+    alt: 'African agricultural engineer operating monitoring drone over golden harvest fields',
+  },
+  {
+    image: smartGreenhouseImg || '/images/african_smart_greenhouse_1791954607562.jpg',
+    fallback: FALLBACK_IMAGES[2],
+    badge: 'Climate-Smart Hydroponics',
+    badgeIcon: 'psychiatry',
+    title: 'Controlled Environment Farming',
+    description: 'Automated solar irrigation and micro-climate regulation for high-yield horticulture.',
+    ticker: 'Bell Peppers ₦18k/Crate • Zone 3 Online',
+    alt: 'African female scientist monitoring hydroponic produce in modern smart greenhouse',
+  },
+  {
+    image: digitalMarketImg || '/images/african_digital_market_1791954607959.jpg',
+    fallback: FALLBACK_IMAGES[3],
+    badge: 'Digital Weighing & Trade Hubs',
+    badgeIcon: 'qr_code_scanner',
+    title: 'Real-Time Commodity Offtake',
+    description: 'Mobile digital payments, electronic scale manifests, and verified cooperative offtake.',
+    ticker: 'Soybeans ₦610k/T • Digital Trade Hub',
+    alt: 'African cooperative farmers and traders using digital devices at harvest collection hub',
+  },
+];
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogin }) => {
   const [currentSlide, setCurrentSlide] = React.useState(0);
@@ -105,6 +120,12 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogi
                   alt={slide.alt} 
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover transform duration-700 group-hover:scale-105"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src !== slide.fallback) {
+                      target.src = slide.fallback;
+                    }
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
               </div>
@@ -202,23 +223,23 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogi
           </div>
 
           {/* Action Area */}
-          <div className="pt-2 space-y-3.5">
+          <div className="pt-2 space-y-4">
             <button
               onClick={onGetStarted}
               className="w-full h-14 bg-[#0a3826] text-white font-heading font-bold text-[15px] rounded-xl flex items-center justify-center gap-2 hover:bg-[#1b4332] active:scale-95 transition-all shadow-md"
             >
-              <span className="material-symbols-outlined text-[20px]">manage_accounts</span>
-              <span>Browse Roles & Enter</span>
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              <span>Get Started / Select Profile Role</span>
               <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
             </button>
 
             <div className="text-center flex justify-between items-center text-[12px] px-1">
-              <span className="text-[#717973]">Quick demo access?</span>
+              <span className="text-[#717973]">Already registered on AgroApp?</span>
               <button
                 onClick={onLogin}
                 className="font-bold text-[#0a3826] hover:text-[#1b4332] flex items-center"
               >
-                Enter Directly as Farmer
+                Sign In to Account
                 <span className="material-symbols-outlined text-[14px] ml-0.5">arrow_forward</span>
               </button>
             </div>

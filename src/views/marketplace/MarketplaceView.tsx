@@ -43,18 +43,47 @@ export const MarketplaceView: React.FC = () => {
       <div className="bg-[#012d1d] text-white p-6 rounded-2xl shadow-sm border border-[#1b4332] space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="bg-[#10b981] text-[#002114] text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">
+                FMAFS & NCX Regulated
+              </span>
+              <span className="text-xs text-[#86af99] font-mono">Real-time Fair Trade Price Surveillance Active</span>
+            </div>
             <h1 className="font-heading font-bold text-2xl">Nationwide Produce Marketplace</h1>
             <p className="text-xs text-[#86af99]">
               Verified Grains, Tubers, Inputs & Processed Commodities directly from Nigerian Farmers & Cooperatives.
             </p>
           </div>
-          <button
-            onClick={() => setActiveView('create_listing')}
-            className="h-10 px-4 bg-[#1b4332] hover:bg-[#274e3d] text-white text-xs font-bold rounded-full flex items-center gap-2 border border-[#86af99]/30 transition-colors shrink-0"
-          >
-            <span className="material-symbols-outlined text-[18px]">add_circle</span>
-            <span>Sell Produce</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveView('dashboard')}
+              className="h-10 px-3 bg-[#10b981] hover:bg-[#059669] text-[#002114] text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors shrink-0 shadow-xs"
+            >
+              <span className="material-symbols-outlined text-[16px]">analytics</span>
+              <span>Regulatory Data</span>
+            </button>
+            <button
+              onClick={() => setActiveView('create_listing')}
+              className="h-10 px-4 bg-[#1b4332] hover:bg-[#274e3d] text-white text-xs font-bold rounded-xl flex items-center gap-2 border border-[#86af99]/30 transition-colors shrink-0"
+            >
+              <span className="material-symbols-outlined text-[18px]">add_circle</span>
+              <span>Sell Produce</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Regulatory Price Corridor Quick Ticker */}
+        <div className="p-3 bg-[#1b4332]/70 rounded-xl border border-[#274e3d] flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-1.5 font-bold text-[#c1ecd4]">
+            <span className="material-symbols-outlined text-[16px] text-[#10b981]">gavel</span>
+            <span>Regulatory Price Corridor:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[#86af99]">
+            <span>Maize: <strong className="text-white">₦32,000/bag</strong> (Cap ₦36k)</span>
+            <span>Rice: <strong className="text-white">₦48,000/bag</strong> (Cap ₦56k)</span>
+            <span>Cassava: <strong className="text-white">₦85,000/MT</strong></span>
+            <span className="text-[#10b981] font-bold">Anti-Gouging: 100% Compliant</span>
+          </div>
         </div>
 
         {/* Search Bar & State Filter */}
