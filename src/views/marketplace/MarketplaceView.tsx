@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { Listing } from '../../types';
-import { getNigerianAvatar } from '../../utils/avatarUtils';
 
 const NIGERIAN_STATES = [
   'All States', 'Benue State', 'Kaduna State', 'Kano State', 'Ogun State', 'Lagos State', 'Plateau State', 'FCT Abuja', 'Enugu State', 'Ondo State'
@@ -23,9 +22,9 @@ export const MarketplaceView: React.FC = () => {
 
   const filteredListings = listings.filter((l) => {
     const matchesSearch =
-      (l.title || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (l.cropType || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-      (l.locationState || '').toLowerCase().includes((searchTerm || '').toLowerCase());
+      l.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.cropType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      l.locationState.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'All' || l.category === selectedCategory;
     const matchesState = selectedState === 'All States' || l.locationState === selectedState;
     return matchesSearch && matchesCategory && matchesState;
@@ -44,9 +43,9 @@ export const MarketplaceView: React.FC = () => {
       <div className="bg-[#012d1d] text-white p-6 rounded-2xl shadow-sm border border-[#1b4332] space-y-4">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h1 className="font-heading font-bold text-2xl">Produce & Farm Supplies Market</h1>
+            <h1 className="font-heading font-bold text-2xl">Nationwide Produce Marketplace</h1>
             <p className="text-xs text-[#86af99]">
-              Buy and sell grains, tubers, seeds, fertilizer and farm goods safely across Nigeria.
+              Verified Grains, Tubers, Inputs & Processed Commodities directly from Nigerian Farmers & Cooperatives.
             </p>
           </div>
           <button
@@ -54,7 +53,7 @@ export const MarketplaceView: React.FC = () => {
             className="h-10 px-4 bg-[#1b4332] hover:bg-[#274e3d] text-white text-xs font-bold rounded-full flex items-center gap-2 border border-[#86af99]/30 transition-colors shrink-0"
           >
             <span className="material-symbols-outlined text-[18px]">add_circle</span>
-            <span>Sell My Produce</span>
+            <span>Sell Produce</span>
           </button>
         </div>
 
@@ -146,20 +145,14 @@ export const MarketplaceView: React.FC = () => {
                   {item.description}
                 </p>
 
-                <div className="pt-2 border-t border-[#e2e2e2] flex items-center justify-between text-[11px] text-[#717973]">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={getNigerianAvatar(item.sellerName)}
-                      alt={item.sellerName}
-                      className="w-6 h-6 rounded-full object-cover border border-[#c1c8c2] shrink-0"
-                    />
-                    <span className="text-[#1a1c1c] font-semibold text-[11px] truncate max-w-[110px]">
-                      {item.sellerName}
-                    </span>
+                <div className="pt-2 border-t border-[#e2e2e2] grid grid-cols-2 gap-2 text-[11px] text-[#717973]">
+                  <div>
+                    <span className="block text-[9px] uppercase font-bold">Location</span>
+                    <span className="text-[#1a1c1c] font-semibold">{item.locationState}</span>
                   </div>
-                  <div className="text-right">
-                    <span className="block text-[9px] uppercase font-bold text-[#717973]">{item.locationState}</span>
-                    <span className="text-[#1a1c1c] font-semibold text-[10px]">
+                  <div>
+                    <span className="block text-[9px] uppercase font-bold">Available</span>
+                    <span className="text-[#1a1c1c] font-semibold">
                       {item.availableQuantity} {item.unit}s
                     </span>
                   </div>
@@ -206,23 +199,16 @@ export const MarketplaceView: React.FC = () => {
               <img
                 src={selectedListing.imageUrl}
                 alt={selectedListing.title}
-                className="w-16 h-16 rounded-xl object-cover shrink-0"
+                className="w-16 h-16 rounded-xl object-cover"
               />
-              <div className="flex-1">
+              <div>
                 <span className="text-[10px] bg-[#c1ecd4] text-[#002114] font-bold px-2 py-0.5 rounded">
                   {selectedListing.locationState}
                 </span>
                 <h3 className="font-heading font-bold text-base text-[#012d1d] mt-0.5">
                   {selectedListing.title}
                 </h3>
-                <div className="flex items-center gap-1.5 mt-1">
-                  <img
-                    src={getNigerianAvatar(selectedListing.sellerName)}
-                    alt={selectedListing.sellerName}
-                    className="w-5 h-5 rounded-full object-cover border border-[#c1c8c2]"
-                  />
-                  <p className="text-xs text-[#414844] font-semibold">{selectedListing.sellerName}</p>
-                </div>
+                <p className="text-xs text-[#414844]">Seller: {selectedListing.sellerName}</p>
               </div>
             </div>
 
@@ -266,15 +252,15 @@ export const MarketplaceView: React.FC = () => {
               {/* Total Summary */}
               <div className="p-3 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2] space-y-1 text-xs">
                 <div className="flex justify-between">
-                  <span>Price ({orderQuantity} units)</span>
+                  <span>Subtotal ({orderQuantity} units)</span>
                   <span className="font-bold">₦{(selectedListing.price * orderQuantity).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-[#717973]">
-                  <span>Safe Payment Protection Fee (0.5%)</span>
+                  <span>AgroApp Secure Escrow Fee (0.5%)</span>
                   <span>₦{((selectedListing.price * orderQuantity) * 0.005).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between font-heading font-bold text-sm text-[#012d1d] pt-2 border-t border-[#c1c8c2]">
-                  <span>Total Money to Hold</span>
+                  <span>Total Escrow Hold Amount</span>
                   <span>₦{((selectedListing.price * orderQuantity) * 1.005).toLocaleString()}</span>
                 </div>
               </div>
@@ -282,7 +268,7 @@ export const MarketplaceView: React.FC = () => {
               <div className="bg-[#1b4332] text-white p-3 rounded-xl text-xs flex items-start gap-2">
                 <span className="material-symbols-outlined text-[#c1ecd4] text-[18px]">verified_user</span>
                 <p className="text-[11px] text-[#86af99]">
-                  Your money is held safely by AgroApp. The seller is only paid after your goods arrive and you check them.
+                  Funds are locked safely in Escrow until delivery is verified and waybill is signed off by buyer.
                 </p>
               </div>
 
@@ -290,7 +276,7 @@ export const MarketplaceView: React.FC = () => {
                 type="submit"
                 className="w-full h-12 bg-[#012d1d] text-white font-heading font-bold text-sm rounded-full flex items-center justify-center gap-2 hover:bg-[#1b4332] active:scale-95 transition-all shadow-md"
               >
-                <span>Confirm Order & Lock Safe Payment</span>
+                <span>Confirm Purchase & Lock Escrow</span>
                 <span className="material-symbols-outlined text-[18px]">lock</span>
               </button>
             </form>
@@ -305,9 +291,9 @@ export const MarketplaceView: React.FC = () => {
             <div className="w-16 h-16 bg-[#c1ecd4] text-[#002114] rounded-full flex items-center justify-center mx-auto">
               <span className="material-symbols-outlined text-[36px]">check_circle</span>
             </div>
-            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Order Placed Successfully!</h3>
+            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Order Created & Escrow Locked!</h3>
             <p className="text-xs text-[#414844]">
-              Your order has been sent to the seller, and a driver has been notified to pick up the produce.
+              Your purchase contract has been submitted to the seller and transporter route assigned.
             </p>
             <button
               onClick={() => {
@@ -317,7 +303,7 @@ export const MarketplaceView: React.FC = () => {
               }}
               className="w-full py-3 bg-[#012d1d] text-white font-bold text-xs rounded-full hover:bg-[#1b4332]"
             >
-              See My Order Status →
+              Track Order Status →
             </button>
           </div>
         </div>

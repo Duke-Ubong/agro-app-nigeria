@@ -19,19 +19,13 @@ export const CreditView: React.FC = () => {
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
     applyLoan({
-      applicantId: user.id,
-      applicantName: user.name,
-      applicantRole: user.role,
-      applicantState: user.state,
+      farmerId: user.id,
       amount: requestedAmount,
-      durationMonths: tenureMonths,
+      interestRate: 5,
       tenureMonths,
-      interestRate: '5%',
       purpose,
-      collateral: 'Farm Yield Guarantee',
-      repaymentEstimate: monthlyRepayment,
-      expectedRepaymentDate: new Date(Date.now() + tenureMonths * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      appliedAt: new Date().toISOString(),
+      status: 'under_review',
+      repaymentSchedule: [],
     });
     setIsSuccessModal(true);
   };
@@ -42,32 +36,32 @@ export const CreditView: React.FC = () => {
       <div className="bg-[#012d1d] text-white p-6 rounded-2xl shadow-sm border border-[#1b4332] space-y-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-[#86af99] bg-[#1b4332] px-3 py-1 rounded-full border border-[#86af99]/30">
-            Low-Interest Farm Loans
+            Federal Ministry Subsidized Agro-Credit
           </span>
-          <h1 className="font-heading font-bold text-2xl mt-2">Farmer Loans & Farm Support</h1>
+          <h1 className="font-heading font-bold text-2xl mt-2">Farmer Agricultural Credit & Micro-Loans</h1>
           <p className="text-xs text-[#86af99]">
-            Get low 5% interest loans for seeds, fertilizer, plowing, and equipment before harvest season.
+            Access 5% Interest Seasonal Working Capital & Trade Credit directly backed by Anchor Borrowers Programme.
           </p>
         </div>
 
         {/* Credit Score & Eligibility Card */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[#1b4332]">
           <div className="bg-[#1b4332] p-4 rounded-xl border border-[#274e3d] space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#86af99]">Farmer Trust Score</span>
+            <span className="text-[10px] font-bold uppercase text-[#86af99]">Digital Credit Score</span>
             <div className="font-heading font-bold text-3xl text-[#c1ecd4]">780 / 850</div>
-            <p className="text-[10px] text-[#86af99]">Excellent (Supported by Cooperative)</p>
+            <p className="text-[10px] text-[#86af99]">Tier-1 Excellent (Cooperative Backed)</p>
           </div>
 
           <div className="bg-[#1b4332] p-4 rounded-xl border border-[#274e3d] space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#86af99]">Maximum Loan You Can Take</span>
+            <span className="text-[10px] font-bold uppercase text-[#86af99]">Pre-Approved Credit Limit</span>
             <div className="font-heading font-bold text-3xl text-[#c1ecd4]">₦1,500,000</div>
-            <p className="text-[10px] text-[#86af99]">No Collateral Needed for Verified Farmers</p>
+            <p className="text-[10px] text-[#86af99]">Collateral-Free for Verified Farmers</p>
           </div>
 
           <div className="bg-[#1b4332] p-4 rounded-xl border border-[#274e3d] space-y-1">
-            <span className="text-[10px] font-bold uppercase text-[#86af99]">Government Supported Rate</span>
+            <span className="text-[10px] font-bold uppercase text-[#86af99]">Federal Interest Subsidy</span>
             <div className="font-heading font-bold text-3xl text-[#c1ecd4]">5.0% Fixed</div>
-            <p className="text-[10px] text-[#86af99]">Normal Bank Rate: 24% (Government Pays 19%)</p>
+            <p className="text-[10px] text-[#86af99]">Commercial Rate: 24% (19% Subsidized)</p>
           </div>
         </div>
       </div>
@@ -75,12 +69,12 @@ export const CreditView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Loan Calculator & Application Form */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-[#c1c8c2] p-6 space-y-4">
-          <h3 className="font-heading font-bold text-base text-[#012d1d]">Farm Loan Calculator & Request Form</h3>
+          <h3 className="font-heading font-bold text-base text-[#012d1d]">Subsidized Seasonal Loan Calculator</h3>
 
           <form onSubmit={handleApply} className="space-y-4 text-xs">
             <div>
               <div className="flex justify-between font-bold text-[#1a1c1c] mb-1">
-                <span>How Much Money Do You Need?</span>
+                <span>Requested Loan Amount</span>
                 <span className="text-sm font-heading text-[#012d1d]">₦{requestedAmount.toLocaleString()}</span>
               </div>
               <input
@@ -99,7 +93,7 @@ export const CreditView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-bold text-[#1a1c1c] mb-1">How Long to Pay Back? (Months)</label>
+              <label className="block font-bold text-[#1a1c1c] mb-1">Loan Tenure / Harvest Duration</label>
               <div className="grid grid-cols-3 gap-2">
                 {[3, 6, 9].map((m) => (
                   <button
@@ -119,30 +113,30 @@ export const CreditView: React.FC = () => {
             </div>
 
             <div>
-              <label className="block font-bold text-[#1a1c1c] mb-1">What Will You Use the Money For?</label>
+              <label className="block font-bold text-[#1a1c1c] mb-1">Credit Purpose</label>
               <select
                 value={purpose}
                 onChange={(e) => setPurpose(e.target.value as any)}
                 className="w-full h-11 px-3 rounded-xl border border-[#717973] font-bold"
               >
-                <option value="Input Seeds & Fertilizer">Seeds & Fertilizer Package</option>
-                <option value="Irrigation Equipment">Solar Water Pump / Irrigation</option>
-                <option value="Mechanization Tractor Rent">Tractor Renting & Land Clearing</option>
+                <option value="Input Seeds & Fertilizer">Hybrid Seeds & NPK Fertilizer Package</option>
+                <option value="Irrigation Equipment">Solar Solar Irrigation Pump System</option>
+                <option value="Mechanization Tractor Rent">Tractor Land Clearing & Plowing Service</option>
               </select>
             </div>
 
             {/* Repayment Breakdown Box */}
             <div className="p-4 bg-[#f3f3f3] rounded-xl border border-[#c1c8c2] space-y-2">
               <div className="flex justify-between">
-                <span>Amount Requested</span>
+                <span>Principal Amount</span>
                 <span className="font-bold">₦{requestedAmount.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-[#717973]">
-                <span>Total 5% Interest Fee ({tenureMonths} Months)</span>
+                <span>Total 5% Annual Subsidized Interest ({tenureMonths} Months)</span>
                 <span>₦{totalInterest.toLocaleString()}</span>
               </div>
               <div className="flex justify-between font-heading font-bold text-sm text-[#012d1d] pt-2 border-t border-[#c1c8c2]">
-                <span>Amount to Pay Each Month</span>
+                <span>Monthly Installment</span>
                 <span>₦{monthlyRepayment.toLocaleString()} / Month</span>
               </div>
             </div>
@@ -152,17 +146,17 @@ export const CreditView: React.FC = () => {
               className="w-full h-12 bg-[#012d1d] text-white font-heading font-bold text-sm rounded-full hover:bg-[#1b4332] active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-[18px]">verified</span>
-              <span>Apply for Loan Now</span>
+              <span>Submit Instant Credit Application</span>
             </button>
           </form>
         </div>
 
         {/* Existing Credit Facilities */}
         <div className="bg-white rounded-2xl border border-[#c1c8c2] p-5 space-y-3">
-          <h3 className="font-heading font-bold text-sm text-[#012d1d]">My Loan Requests</h3>
+          <h3 className="font-heading font-bold text-sm text-[#012d1d]">Your Active Credit Applications</h3>
           <div className="space-y-3 text-xs">
             {loans.length === 0 ? (
-              <p className="text-xs text-[#717973]">No active loans found. Apply using the form.</p>
+              <p className="text-xs text-[#717973]">No active loans found. Apply using the calculator.</p>
             ) : (
               loans.map((ln) => (
                 <div key={ln.id} className="p-3 bg-[#f9f9f9] border border-[#e2e2e2] rounded-xl space-y-1">
@@ -171,14 +165,14 @@ export const CreditView: React.FC = () => {
                     <span className="text-[#012d1d]">₦{ln.amount.toLocaleString()}</span>
                   </div>
                   <div className="text-[11px] text-[#717973]">
-                    Pay Back In: {ln.durationMonths || ln.tenureMonths || 6} Months • Interest: {ln.interestRate}
+                    Tenure: {ln.tenureMonths} Months • Rate: {ln.interestRate}%
                   </div>
                   <div className="pt-1 flex justify-between items-center">
                     <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-[#ffdeac] text-[#281900]">
-                      {ln.status === 'under_review' || ln.status === 'pending' ? 'Under Review' : ln.status.replace('_', ' ')}
+                      {ln.status.replace('_', ' ')}
                     </span>
                     <span className="text-[10px] text-[#717973]">
-                      Date: {new Date(ln.appliedAt || ln.createdAt || Date.now()).toLocaleDateString()}
+                      Applied: {new Date(ln.appliedAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -195,9 +189,9 @@ export const CreditView: React.FC = () => {
             <div className="w-16 h-16 bg-[#c1ecd4] text-[#002114] rounded-full flex items-center justify-center mx-auto">
               <span className="material-symbols-outlined text-[36px]">verified</span>
             </div>
-            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Loan Request Received!</h3>
+            <h3 className="font-heading font-bold text-lg text-[#012d1d]">Application Under Review</h3>
             <p className="text-xs text-[#414844]">
-              Your 5% interest loan application has been submitted to your Cooperative Leader and Bank of Agriculture team for fast review.
+              Your 5% subsidized credit request has been dispatched to your Cooperative Executive & State ADP Board for automated approval.
             </p>
             <button
               onClick={() => setIsSuccessModal(false)}

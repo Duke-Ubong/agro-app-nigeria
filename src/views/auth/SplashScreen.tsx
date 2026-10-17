@@ -1,171 +1,168 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowRight, ShieldCheck, TrendingUp, Truck, Users, Sparkles } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useApp } from '../../context/AppContext';
-import { useAuth } from '../../context/AuthContext';
-import { AgroAppLogo } from '../../components/common/AgroAppLogo';
-
-import cooperativeFarmImg from '../../assets/images/african_cooperative_farm_1786635857001.jpg';
-import marketProduceImg from '../../assets/images/african_market_produce_1786635867422.jpg';
-import agritechLogisticsImg from '../../assets/images/african_agritech_logistics_1786635878572.jpg';
+import React from 'react';
 
 interface SplashScreenProps {
-  onGetStarted?: () => void;
-  onLogin?: () => void;
+  onGetStarted: () => void;
+  onLogin: () => void;
 }
 
-const HIGHLIGHT_SLIDES = [
-  {
-    icon: <Users className="w-4 h-4 text-[#008751]" />,
-    badge: 'Cooperative Hubs',
-    title: 'Aggregated Produce & Direct Off-take',
-    desc: 'Connecting 40M+ farmers directly with food processors and state grain reserves.',
-    img: cooperativeFarmImg,
-  },
-  {
-    icon: <TrendingUp className="w-4 h-4 text-[#e0a000]" />,
-    badge: 'Live Naira Prices',
-    title: 'Real-time Market Transparency',
-    desc: 'Track commodity rates across Dawanau, Bodija, Mile 12, and Zaki Biam markets.',
-    img: marketProduceImg,
-  },
-  {
-    icon: <Truck className="w-4 h-4 text-[#053221]" />,
-    badge: 'Interstate Logistics',
-    title: 'Tracked Cold-chain & Haulage',
-    desc: 'Guaranteed waybills and transport route assignment across 36 States & FCT.',
-    img: agritechLogisticsImg,
-  },
-];
+  const slides = [
+    {
+      image: '/src/assets/images/african_agritech_tablet_1791954606275.jpg',
+      badge: 'Smart Agronomy & IoT Telemetry',
+      badgeIcon: 'sensors',
+      title: 'Precision Farm Advisory',
+      description: 'Satellite & field sensors delivering localized soil data to smallholders across Nigeria.',
+      ticker: 'NG Maize ₦480k/T • Soil Moisture 68%',
+      alt: 'African agronomist using digital tablet and solar telemetry in maize field',
+    },
+    {
+      image: '/src/assets/images/african_drone_farming_1791954607666.jpg',
+      badge: 'Aerial Drone Survey & Mapping',
+      badgeIcon: 'flight',
+      title: 'Multispectral Crop Health',
+      description: 'Early pest and drought detection across grain belts in Kaduna, Niger and Benue.',
+      ticker: 'Paddy Rice ₦520k/T • Drone Scan Active',
+      alt: 'African agricultural engineer operating monitoring drone over golden harvest fields',
+    },
+    {
+      image: '/src/assets/images/african_smart_greenhouse_1791954607562.jpg',
+      badge: 'Climate-Smart Hydroponics',
+      badgeIcon: 'psychiatry',
+      title: 'Controlled Environment Farming',
+      description: 'Automated solar irrigation and micro-climate regulation for high-yield horticulture.',
+      ticker: 'Bell Peppers ₦18k/Crate • Zone 3 Online',
+      alt: 'African female scientist monitoring hydroponic produce in modern smart greenhouse',
+    },
+    {
+      image: '/src/assets/images/african_digital_market_1791954607959.jpg',
+      badge: 'Digital Weighing & Trade Hubs',
+      badgeIcon: 'qr_code_scanner',
+      title: 'Real-Time Commodity Offtake',
+      description: 'Mobile digital payments, electronic scale manifests, and verified cooperative offtake.',
+      ticker: 'Soybeans ₦610k/T • Digital Trade Hub',
+      alt: 'African cooperative farmers and traders using digital devices at harvest collection hub',
+    },
+  ];
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogin }) => {
-  const { setActiveView } = useApp();
-  const { loginRole, user } = useAuth();
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [currentSlide, setCurrentSlide] = React.useState(0);
+  const [isPaused, setIsPaused] = React.useState(false);
 
-  // Auto-advance highlights every 4 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % HIGHLIGHT_SLIDES.length);
+  React.useEffect(() => {
+    if (isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 4500);
-    return () => clearInterval(timer);
-  }, []);
+    return () => clearInterval(interval);
+  }, [isPaused, slides.length]);
 
-  const handleGetStarted = () => {
-    if (onGetStarted) {
-      onGetStarted();
-    } else {
-      setActiveView('role_selection');
-    }
+  const nextSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
   };
 
-  const handleLogin = () => {
-    if (onLogin) {
-      onLogin();
-    } else {
-      if (!user) {
-        loginRole('farmer');
-      }
-      setActiveView('role_selection');
-    }
+  const prevSlide = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   };
-
-  const currentSlide = HIGHLIGHT_SLIDES[activeSlide];
 
   return (
-    <div className="min-h-screen bg-[#f4f7f5] sm:bg-[#e6ece8] flex flex-col justify-center items-center p-3 sm:p-6 lg:p-10 selection:bg-[#c1ecd4]">
-      {/* Container Box */}
-      <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-md sm:max-w-xl bg-white sm:rounded-3xl sm:shadow-2xl sm:border sm:border-[#d0d7d2] p-5 sm:p-8 flex flex-col justify-between items-center my-auto relative overflow-hidden min-h-[92vh] sm:min-h-[720px]"
-      >
-        {/* Decorative Top Ambient Glows */}
-        <div className="absolute -top-24 -right-24 w-52 h-52 bg-[#008751]/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-52 h-52 bg-[#e0a000]/10 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Top Header & Federal Nigerian Identity Tag */}
-        <div className="w-full flex flex-col items-center gap-2.5 z-10 pt-1">
-          {/* Green-White-Green Flag Accent Tag */}
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="flex items-center gap-2 bg-[#f0f7f3] border border-[#c2e2d0] px-3 py-1 rounded-full shadow-2xs"
-          >
-            <div className="flex items-center gap-0.5 shrink-0">
-              <span className="w-2 h-3.5 bg-[#008751] rounded-xs" />
-              <span className="w-2 h-3.5 bg-white border-y border-[#d0d7d2] rounded-xs" />
-              <span className="w-2 h-3.5 bg-[#008751] rounded-xs" />
-            </div>
-            <span className="text-[10px] font-bold tracking-wider text-[#004d2e] uppercase">
-              Federal Ministry of Agriculture & Food Security x USUCO
-            </span>
-          </motion.div>
-
-          {/* Logo Brand Title */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="pt-1 flex flex-col items-center"
-          >
-            <AgroAppLogo
-              iconSize={46}
-              textSize="text-3xl sm:text-4xl"
-              showSubtag
-              subtext="Federal Ministry of Agriculture • USUCO Agro-Connect"
-            />
-          </motion.div>
-        </div>
-
-        {/* Dynamic Hero Carousel Card */}
-        <div className="w-full flex-1 flex flex-col justify-center items-center my-3 z-10 space-y-4 max-w-lg">
-          {/* Animated Media Frame */}
-          <div className="w-full aspect-[16/10] sm:aspect-[16/9] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-[#dce4de] bg-slate-100 relative group">
-            <AnimatePresence mode="wait">
-              <motion.img
-                key={currentSlide.img}
-                src={currentSlide.img}
-                alt={currentSlide.title}
-                referrerPolicy="no-referrer"
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.6 }}
-                className="w-full h-full object-cover object-center"
-              />
-            </AnimatePresence>
-
-            {/* Gradient Overlay for bottom readable badges */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20 pointer-events-none" />
-
-            {/* Top Floating Glass Badge */}
-            <div className="absolute top-3 left-3 bg-[#012d1d]/80 backdrop-blur-md text-white text-[10px] font-extrabold px-2.5 py-1 rounded-lg border border-white/20 flex items-center gap-1.5 shadow-md">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#c1ecd4]" />
-              <span>36 States & FCT Digital Registry</span>
-            </div>
-
-            {/* Bottom Overlay Info on Image */}
-            <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-              <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/15 text-white">
-                <span className="text-[10px] text-[#c1ecd4] font-bold block uppercase tracking-wide">
-                  Live Commodity Index
-                </span>
-                <span className="text-xs font-bold font-mono text-white">
-                  🇳🇬 Maize ₦480k/T • Paddy ₦520k/T
-                </span>
+    <div className="min-h-screen bg-[#ebf0ed] flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-xl w-full max-w-[500px] overflow-hidden">
+        <div className="p-6 pb-8 space-y-6">
+          
+          {/* Logo Area */}
+          <div className="flex flex-col items-center justify-center pt-2">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-10 bg-[#063d28] rounded-bl-full rounded-br-full rounded-tr-full flex items-center justify-center relative overflow-hidden">
+                <span className="material-symbols-outlined text-[#f2a611] text-[20px] absolute">emoji_nature</span>
               </div>
+              <h1 className="font-heading font-black text-2xl text-[#012d1d] tracking-tight flex items-baseline">
+                Agro<span className="text-[#f2a611]">App</span><span className="text-[#063d28] w-1.5 h-1.5 rounded-full bg-[#063d28] ml-1"></span>
+              </h1>
+            </div>
+            <p className="text-[10px] mt-1 text-[#414844] font-bold tracking-widest uppercase">
+              FEDERAL MINISTRY OF AGRICULTURE • USUCO AGRO-CONNECT
+            </p>
+          </div>
 
-              {/* Progress Dots */}
-              <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md p-1.5 rounded-full border border-white/15">
-                {HIGHLIGHT_SLIDES.map((_, idx) => (
+          {/* Hero Image Slider Card */}
+          <div 
+            className="relative w-full aspect-[4/2.5] rounded-2xl overflow-hidden shadow-inner group select-none"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            {/* Slide Images */}
+            {slides.map((slide, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+                  index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+                }`}
+              >
+                <img 
+                  src={slide.image} 
+                  alt={slide.alt} 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/30 pointer-events-none" />
+              </div>
+            ))}
+
+            {/* Top Badge (Dynamic per slide) */}
+            <div className="absolute top-3 left-3 z-20 bg-[#0a3826]/90 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 border border-white/20 shadow-md">
+              <span className="material-symbols-outlined text-[13px] text-[#f2a611]">{slides[currentSlide].badgeIcon}</span>
+              <span>{slides[currentSlide].badge}</span>
+            </div>
+
+            {/* Slide Index Counter Badge */}
+            <div className="absolute top-3 right-3 z-20 bg-black/60 backdrop-blur-md text-white text-[10px] font-mono px-2 py-1 rounded-md border border-white/10">
+              {currentSlide + 1} / {slides.length}
+            </div>
+
+            {/* Previous & Next Control Buttons */}
+            <button
+              onClick={prevSlide}
+              aria-label="Previous slide"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-[#0a3826] text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all opacity-75 hover:opacity-100 active:scale-90"
+            >
+              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
+            </button>
+            <button
+              onClick={nextSlide}
+              aria-label="Next slide"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-[#0a3826] text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-all opacity-75 hover:opacity-100 active:scale-90"
+            >
+              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
+            </button>
+
+            {/* Bottom Bar overlay with Ticker & Pagination Indicators */}
+            <div className="absolute bottom-0 left-0 right-0 z-20 bg-[#1e2a22]/90 backdrop-blur-md px-3 py-2 flex justify-between items-center text-white border-t border-white/10">
+              <div className="flex flex-col">
+                <span className="text-[8.5px] font-bold text-[#f2a611] uppercase tracking-wider flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4caf50] animate-ping" />
+                  AGRITECH LIVE TELEMETRY
+                </span>
+                <div className="text-[11px] font-bold flex items-center gap-1.5 text-white/95">
+                  <span>{slides[currentSlide].ticker}</span>
+                </div>
+              </div>
+              
+              {/* Pagination Dots */}
+              <div className="flex items-center gap-1.5">
+                {slides.map((_, dotIndex) => (
                   <button
-                    key={idx}
-                    onClick={() => setActiveSlide(idx)}
+                    key={dotIndex}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide(dotIndex);
+                    }}
+                    aria-label={`Go to slide ${dotIndex + 1}`}
                     className={`h-1.5 rounded-full transition-all duration-300 ${
-                      activeSlide === idx ? 'w-5 bg-[#c1ecd4]' : 'w-1.5 bg-white/40'
+                      dotIndex === currentSlide 
+                        ? 'w-5 bg-[#f2a611]' 
+                        : 'w-1.5 bg-white/40 hover:bg-white/70'
                     }`}
                   />
                 ))}
@@ -173,82 +170,61 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onGetStarted, onLogi
             </div>
           </div>
 
-          {/* Staggered Text & Value Proposition */}
-          <div className="w-full text-center space-y-2 px-1 min-h-[96px] flex flex-col justify-center">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeSlide}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35 }}
-                className="space-y-1"
-              >
-                <div className="inline-flex items-center gap-1.5 bg-[#f0f7f3] text-[#008751] font-bold text-[11px] px-2.5 py-0.5 rounded-full border border-[#c2e2d0]">
-                  {currentSlide.icon}
-                  <span>{currentSlide.badge}</span>
-                </div>
-                <h1 className="font-heading font-extrabold text-xl sm:text-2xl text-[#111827] tracking-tight leading-tight">
-                  {currentSlide.title}
-                </h1>
-                <p className="text-xs sm:text-sm text-[#4b5563] max-w-md mx-auto leading-relaxed">
-                  {currentSlide.desc}
-                </p>
-              </motion.div>
-            </AnimatePresence>
+          {/* Dynamic Slide Context Headline */}
+          <div className="text-center space-y-2 px-2 transition-all">
+            <div className="inline-flex items-center gap-1.5 bg-[#f4f7f5] border border-[#c1c8c2]/60 rounded-full px-3 py-1 shadow-sm">
+              <span className="material-symbols-outlined text-[#f2a611] text-[15px]">psychology</span>
+              <span className="text-[#0a3826] font-bold text-[11px]">Nigerian Agri-Technology Initiative</span>
+            </div>
+
+            <h2 className="font-heading font-black text-2xl text-[#1a1c1c] leading-tight">
+              {slides[currentSlide].title}
+            </h2>
+            <p className="text-xs text-[#414844] max-w-sm mx-auto leading-relaxed">
+              {slides[currentSlide].description}
+            </p>
           </div>
 
-          {/* Key Metrics Strip */}
-          <div className="w-full grid grid-cols-3 gap-2 pt-1 border-t border-[#e2e8e4]">
-            <div className="p-2 rounded-xl bg-[#f8faf9] border border-[#e2e8e4] text-center">
-              <div className="text-xs sm:text-sm font-extrabold text-[#008751] font-heading">36 States</div>
-              <div className="text-[10px] text-[#6b7280] font-medium">+ FCT Abuja</div>
+          {/* Metrics */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="border border-[#c1c8c2] rounded-xl p-2 text-center bg-[#f9faf9]">
+              <div className="font-bold text-[#0a3826] text-sm">36 States</div>
+              <div className="text-[10px] text-[#717973]">+ FCT Abuja</div>
             </div>
-            <div className="p-2 rounded-xl bg-[#f8faf9] border border-[#e2e8e4] text-center">
-              <div className="text-xs sm:text-sm font-extrabold text-[#111827] font-heading">40M+</div>
-              <div className="text-[10px] text-[#6b7280] font-medium">Smallholders</div>
+            <div className="border border-[#c1c8c2] rounded-xl p-2 text-center bg-[#f9faf9]">
+              <div className="font-bold text-[#1a1c1c] text-sm">40M+</div>
+              <div className="text-[10px] text-[#717973]">Smallholders</div>
             </div>
-            <div className="p-2 rounded-xl bg-[#f8faf9] border border-[#e2e8e4] text-center">
-              <div className="text-xs sm:text-sm font-extrabold text-[#008751] font-heading">Zero-Fee</div>
-              <div className="text-[10px] text-[#6b7280] font-medium">PWA Offline</div>
+            <div className="border border-[#c1c8c2] rounded-xl p-2 text-center bg-[#f9faf9]">
+              <div className="font-bold text-[#1a1c1c] text-sm">Zero-Fee</div>
+              <div className="text-[10px] text-[#717973]">PWA Offline</div>
+            </div>
+          </div>
+
+          {/* Action Area */}
+          <div className="pt-2 space-y-3.5">
+            <button
+              onClick={onGetStarted}
+              className="w-full h-14 bg-[#0a3826] text-white font-heading font-bold text-[15px] rounded-xl flex items-center justify-center gap-2 hover:bg-[#1b4332] active:scale-95 transition-all shadow-md"
+            >
+              <span className="material-symbols-outlined text-[20px]">manage_accounts</span>
+              <span>Browse Roles & Enter</span>
+              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+            </button>
+
+            <div className="text-center flex justify-between items-center text-[12px] px-1">
+              <span className="text-[#717973]">Quick demo access?</span>
+              <button
+                onClick={onLogin}
+                className="font-bold text-[#0a3826] hover:text-[#1b4332] flex items-center"
+              >
+                Enter Directly as Farmer
+                <span className="material-symbols-outlined text-[14px] ml-0.5">arrow_forward</span>
+              </button>
             </div>
           </div>
         </div>
-
-        {/* Bottom CTA Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 15 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="w-full pt-2 space-y-3 text-center z-10"
-        >
-          <motion.button
-            whileHover={{ scale: 1.015 }}
-            whileTap={{ scale: 0.985 }}
-            onClick={handleGetStarted}
-            className="w-full h-13 sm:h-14 bg-[#053221] hover:bg-[#09462e] text-white font-heading font-bold text-sm sm:text-base rounded-xl sm:rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transition-all cursor-pointer group relative overflow-hidden"
-          >
-            {/* Subtle Shimmer Effect */}
-            <div className="absolute inset-0 w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-[300%] transition-transform duration-1000 ease-out" />
-
-            <Sparkles className="w-4 h-4 text-[#c1ecd4]" />
-            <span>Get Started / Select Profile Role</span>
-            <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200" />
-          </motion.button>
-
-          <div className="flex items-center justify-between text-xs text-[#6b7280] px-1">
-            <span>Already registered on AgroApp?</span>
-            <button
-              onClick={handleLogin}
-              className="font-bold text-[#008751] hover:text-[#053221] hover:underline cursor-pointer transition-colors"
-            >
-              Sign In to Account →
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
+      </div>
     </div>
   );
 };
-
-

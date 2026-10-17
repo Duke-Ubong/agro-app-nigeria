@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from './context/AuthContext';
 import { useApp } from './context/AppContext';
+import { UserRole } from './types';
 
 // Layout
 import { Header } from './components/layout/Header';
@@ -10,9 +11,7 @@ import { SidebarNav } from './components/layout/SidebarNav';
 // Auth & Onboarding Flow
 import { SplashScreen } from './views/auth/SplashScreen';
 import { RoleSelection } from './views/auth/RoleSelection';
-import { RegistrationFlow } from './views/auth/RegistrationFlow';
 import { IdentityVerification } from './views/auth/IdentityVerification';
-import { AdminDepartmentSelection } from './views/admin/AdminDepartmentSelection';
 
 // Dashboards
 import { FarmerDashboard } from './views/dashboards/FarmerDashboard';
@@ -32,8 +31,8 @@ import { AdvisoryView } from './views/advisory/AdvisoryView';
 import { ProfileView } from './views/profile/ProfileView';
 
 export const App: React.FC = () => {
-  const { user, isAuthLoading } = useAuth();
-  const { activeView } = useApp();
+  const { user, isAuthLoading, loginRole } = useAuth();
+  const { activeView, setActiveView } = useApp();
 
   // 1. Loading state
   if (isAuthLoading) {
@@ -47,19 +46,44 @@ export const App: React.FC = () => {
     );
   }
 
-  // 2. Unauthenticated Onboarding or Fullscreen Auth View State
-  if (!user || activeView === 'splash' || activeView === 'role_selection' || activeView === 'admin_department_select') {
+  // 2. Unauthenticated Onboarding State (Direct Role Entry - No Registration forms)
+  if (!user) {
+    if (activeView === 'splash') {
+      return (
+        <SplashScreen
+          onGetStarted={() => setActiveView('role_selection')}
+          onLogin={() => {
+            loginRole('farmer');
+            setActiveView('dashboard');
+          }}
+        />
+      );
+    }
+    if (activeView === 'role_selection') {
+      return (
+        <RoleSelection
+          onSelectRole={(role) => {
+            loginRole(role);
+            setActiveView('dashboard');
+          }}
+          onBack={() => setActiveView('splash')}
+        />
+      );
+    }
     return (
-      <div className="min-h-screen bg-[#e6ece8] text-[#1a1c1c] flex flex-col font-body selection:bg-[#c1ecd4] selection:text-[#002114] justify-center items-center">
-        <div className="w-full max-w-[1440px] min-h-screen bg-white shadow-2xl border-x border-[#c1c8c2]/40 flex flex-col relative overflow-hidden">
-          {activeView === 'role_selection' && <RoleSelection />}
-          {activeView === 'admin_department_select' && <AdminDepartmentSelection />}
-          {activeView === 'register' && <RegistrationFlow />}
-          {activeView === 'verify_identity' && <IdentityVerification />}
-          {activeView !== 'role_selection' && activeView !== 'admin_department_select' && activeView !== 'register' && activeView !== 'verify_identity' && <SplashScreen />}
-        </div>
-      </div>
+      <SplashScreen
+        onGetStarted={() => setActiveView('role_selection')}
+        onLogin={() => {
+          loginRole('farmer');
+          setActiveView('dashboard');
+        }}
+      />
     );
+  }
+
+  // Handle verify_identity when user is authenticated (if accessed via KYC flow)
+  if (activeView === 'verify_identity') {
+    return <IdentityVerification onComplete={() => setActiveView('dashboard')} onSkip={() => setActiveView('dashboard')} />;
   }
 
   // 3. Render Dashboard based on User Role if 'dashboard' is activeView
@@ -89,8 +113,6 @@ export const App: React.FC = () => {
     switch (activeView) {
       case 'dashboard':
         return renderDashboard();
-      case 'admin':
-        return <AdminPortal />;
       case 'marketplace':
         return <MarketplaceView />;
       case 'create_listing':
@@ -111,25 +133,23 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#e6ece8] text-[#1a1c1c] flex flex-col font-body selection:bg-[#c1ecd4] selection:text-[#002114] justify-center items-center">
-      <div className="w-full max-w-[1440px] min-h-screen bg-[#f3f3f3] shadow-2xl border-x border-[#c1c8c2]/40 flex flex-col relative overflow-hidden">
-        {/* Top Navigation Header */}
-        <Header />
+    <div className="min-h-screen bg-[#f3f3f3] text-[#1a1c1c] flex flex-col font-body selection:bg-[#c1ecd4] selection:text-[#002114]">
+      {/* Top Navigation Header */}
+      <Header />
 
-        {/* Main Body with Responsive Sidebar */}
-        <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6 items-start">
-          <aside className="hidden md:block w-64 shrink-0">
-            <SidebarNav />
-          </aside>
+      {/* Main Body with Responsive Sidebar */}
+      <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex gap-6">
+        <aside className="hidden md:block w-60 shrink-0">
+          <SidebarNav />
+        </aside>
 
-          <main className="flex-1 min-w-0 pb-20 md:pb-6">
-            {renderActiveView()}
-          </main>
-        </div>
-
-        {/* Mobile Bottom Navigation Bar */}
-        <BottomNav />
+        <main className="flex-1 min-w-0 pb-20 md:pb-6">
+          {renderActiveView()}
+        </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomNav />
     </div>
   );
 };

@@ -1,40 +1,21 @@
 import React from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { useApp } from '../../context/AppContext';
 import { UserRole } from '../../types';
 
 export const ROLE_LABELS: Record<UserRole, { title: string; subtitle: string; icon: string }> = {
-  farmer: { title: 'Farmer', subtitle: 'Grow & Sell Crops', icon: 'grass' },
-  cooperative: { title: 'Cooperative', subtitle: 'Farmer Groups & Unions', icon: 'groups' },
-  buyer: { title: 'Buyer / Factory', subtitle: 'Wholesalers & Food Processors', icon: 'storefront' },
-  supplier: { title: 'Farm Supplies Shop', subtitle: 'Seeds, Fertilizer & Tools', icon: 'water_drop' },
-  transporter: { title: 'Transporter', subtitle: 'Trucks & Produce Delivery', icon: 'local_shipping' },
-  institutional_admin: { title: 'State Extension Admin', subtitle: 'State Ministry (ADP)', icon: 'domain' },
-  gov_admin: { title: 'Ministry Admin', subtitle: 'Federal Agriculture Ministry', icon: 'policy' },
-  super_admin: { title: 'Super Admin', subtitle: 'Platform Management', icon: 'admin_panel_settings' },
+  farmer: { title: 'Farmer', subtitle: 'Producers & Smallholders', icon: 'grass' },
+  cooperative: { title: 'Cooperative', subtitle: 'Cluster & Group Lead', icon: 'groups' },
+  buyer: { title: 'Buyer / Processor', subtitle: 'Enterprise & Off-taker', icon: 'storefront' },
+  supplier: { title: 'Input Supplier', subtitle: 'Seeds, Fertilizer & Tools', icon: 'water_drop' },
+  transporter: { title: 'Transporter', subtitle: 'Haulage & Fleet Logistics', icon: 'local_shipping' },
+  institutional_admin: { title: 'Institutional Admin', subtitle: 'State Ag Development (ADP)', icon: 'domain' },
+  gov_admin: { title: 'Gov Regulator Admin', subtitle: 'Federal Ministry Directorate', icon: 'policy' },
+  super_admin: { title: 'Super Admin', subtitle: 'System & Developer Portal', icon: 'admin_panel_settings' },
 };
 
 export const RoleSwitcher: React.FC = () => {
   const { role, setRole } = useAuth();
-  const { setActiveView, setAdminTab } = useApp();
   const [isOpen, setIsOpen] = React.useState(false);
-
-  const handleRoleSelect = (r: UserRole) => {
-    setRole(r);
-    setIsOpen(false);
-    if (r === 'super_admin') {
-      setActiveView('admin');
-      if (setAdminTab) setAdminTab('super_admin');
-    } else if (r === 'gov_admin') {
-      setActiveView('admin');
-      if (setAdminTab) setAdminTab('ministry_policy');
-    } else if (r === 'institutional_admin') {
-      setActiveView('admin');
-      if (setAdminTab) setAdminTab('state_adp');
-    } else {
-      setActiveView('dashboard');
-    }
-  };
 
   return (
     <div className="relative">
@@ -65,7 +46,10 @@ export const RoleSwitcher: React.FC = () => {
               return (
                 <button
                   key={r}
-                  onClick={() => handleRoleSelect(r)}
+                  onClick={() => {
+                    setRole(r);
+                    setIsOpen(false);
+                  }}
                   className={`w-full text-left p-2 rounded-lg flex items-center gap-3 transition-colors ${
                     isSelected
                       ? 'bg-[#012d1d] text-white'

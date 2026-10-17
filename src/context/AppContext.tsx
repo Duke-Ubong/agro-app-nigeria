@@ -11,6 +11,14 @@ import {
   MarketPrice,
   WeatherInfo,
   UserRole,
+  CooperativeMember,
+  WarehouseIntake,
+  BulkInputCampaign,
+  OfftakerContract,
+  MemberLoanRecord,
+  FarmPlot,
+  CropGrowthStage,
+  FarmerDeliveryPass,
 } from '../types';
 import {
   INITIAL_LISTINGS,
@@ -23,6 +31,17 @@ import {
   MARKET_PRICES,
   WEATHER_DATA,
 } from '../data/mockData';
+import {
+  INITIAL_COOP_MEMBERS,
+  INITIAL_WAREHOUSE_INTAKES,
+  INITIAL_BULK_CAMPAIGNS,
+  INITIAL_OFFTAKER_CONTRACTS,
+  INITIAL_MEMBER_LOANS,
+} from '../data/cooperativeData';
+import {
+  INITIAL_FARM_PLOTS,
+  INITIAL_DELIVERY_PASSES,
+} from '../data/farmerData';
 
 interface AppContextType {
   listings: Listing[];
@@ -34,7 +53,7 @@ interface AppContextType {
   transactions: Transaction[];
   walletTransactions: Transaction[];
   walletBalance: number;
-  addTransaction: (tx: Partial<Transaction> & { type: Transaction['type']; amount: number; description: string }) => void;
+  addTransaction: (tx: Omit<Transaction, 'id' | 'timestamp' | 'reference'>) => void;
   loans: LoanApplication[];
   applyForLoan: (loanData: Omit<LoanApplication, 'id' | 'createdAt' | 'status'>) => void;
   applyLoan: (loanData: Omit<LoanApplication, 'id' | 'createdAt' | 'status'>) => void;
@@ -59,10 +78,32 @@ interface AppContextType {
   extensionGuides: any[];
   activeView: string;
   setActiveView: (view: string) => void;
-  adminTab: string;
-  setAdminTab: (tab: string) => void;
   selectedStateFilter: string;
   setSelectedStateFilter: (state: string) => void;
+
+  // Cooperative Operations
+  coopMembers: CooperativeMember[];
+  addCoopMember: (member: Omit<CooperativeMember, 'id' | 'joinedDate'>) => void;
+  updateCoopMember: (id: string, updates: Partial<CooperativeMember>) => void;
+  warehouseIntakes: WarehouseIntake[];
+  logWarehouseIntake: (intake: Omit<WarehouseIntake, 'id' | 'receiptNumber' | 'timestamp'>) => WarehouseIntake;
+  bulkInputCampaigns: BulkInputCampaign[];
+  createBulkInputCampaign: (campaign: Omit<BulkInputCampaign, 'id'>) => void;
+  joinBulkInputCampaign: (campaignId: string, memberId: string, quantity: number, paymentMethod: 'paid_cash' | 'financed_on_credit') => void;
+  markBulkInputDistributed: (campaignId: string, memberId: string) => void;
+  offtakerContracts: OfftakerContract[];
+  updateContractProgress: (contractId: string, additionalMT: number) => void;
+  memberLoans: MemberLoanRecord[];
+  recordLoanRepayment: (loanId: string, amount: number) => void;
+
+  // Smallholder Farmer Operations
+  farmPlots: FarmPlot[];
+  addFarmPlot: (plot: Omit<FarmPlot, 'id'>) => void;
+  updateFarmPlotStage: (plotId: string, stage: CropGrowthStage) => void;
+  farmerDeliveryPasses: FarmerDeliveryPass[];
+  createDeliveryPass: (pass: Omit<FarmerDeliveryPass, 'id' | 'passCode' | 'createdAt' | 'status'>) => FarmerDeliveryPass;
+  orderBulkInputForFarmer: (campaignId: string, units: number, paymentMethod: 'cash' | 'credit') => void;
+  withdrawFromWallet: (amountNaira: number, bankCode: string, bankName: string, accountNumber: string, accountName: string) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -77,9 +118,294 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [usersList, setUsersList] = useState<User[]>(INITIAL_USERS);
   const [language, setLanguage] = useState<Language>('en');
   const [lowBandwidthMode, setLowBandwidthMode] = useState<boolean>(false);
-  const [activeView, setActiveView] = useState<string>('splash');
-  const [adminTab, setAdminTab] = useState<string>('overview');
+  const [activeView, setActiveView] = useState<string>('dashboard');
   const [selectedStateFilter, setSelectedStateFilter] = useState<string>('All States');
+
+  // Cooperative Operation State
+  const [coopMembers, setCoopMembers] = useState<CooperativeMember[]>(INITIAL_COOP_MEMBERS);
+  const [warehouseIntakes, setWarehouseIntakes] = useState<WarehouseIntake[]>(INITIAL_WAREHOUSE_INTAKES);
+  const [bulkInputCampaigns, setBulkInputCampaigns] = useState<BulkInputCampaign[]>(INITIAL_BULK_CAMPAIGNS);
+  const [offtakerContracts, setOfftakerContracts] = useState<OfftakerContract[]>(INITIAL_OFFTAKER_CONTRACTS);
+  const [memberLoans, setMemberLoans] = useState<MemberLoanRecord[]>(INITIAL_MEMBER_LOANS);
+
+  // Smallholder Farmer State
+  const [farmPlots, setFarmPlots] = useState<FarmPlot[]>(INITIAL_FARM_PLOTS);
+  const [farmerDeliveryPasses, setFarmerDeliveryPasses] = useState<FarmerDeliveryPass[]>(INITIAL_DELIVERY_PASSES);
+  const [farmerWalletBalance, setFarmerWalletBalance] = useState<number>(3850000);
+
+  const addCoopMember = (memberData: Omit<CooperativeMember, 'id' | 'joinedDate'>) => {
+    const newMember: CooperativeMember = {
+      ...memberData,
+      id: `mem_${Date.now().toString().slice(-4)}`,
+      joinedDate: new Date().toISOString().split('T')[0],
+    };
+    setCoopMembers((prev) => [newMember, ...prev]);
+    addAuditLog('Cooperative Manager', 'cooperative', 'ENROLL_MEMBER', `Enrolled member farmer ${newMember.name} in ${newMember.cluster}`);
+  };
+
+  const updateCoopMember = (id: string, updates: Partial<CooperativeMember>) => {
+    setCoopMembers((prev) => prev.map((m) => (m.id === id ? { ...m, ...updates } : m)));
+    addAuditLog('Cooperative Manager', 'cooperative', 'UPDATE_MEMBER', `Updated member record ${id}`);
+  };
+
+  const logWarehouseIntake = (intakeData: Omit<WarehouseIntake, 'id' | 'receiptNumber' | 'timestamp'>) => {
+    const newIntake: WarehouseIntake = {
+      ...intakeData,
+      id: `intk_${Date.now().toString().slice(-4)}`,
+      receiptNumber: `WHR-OG-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      timestamp: new Date().toISOString(),
+    };
+    setWarehouseIntakes((prev) => [newIntake, ...prev]);
+    
+    // Update member aggregated MT and adjust loan balance if harvest deduction applied
+    setCoopMembers((prev) =>
+      prev.map((m) =>
+        m.id === intakeData.farmerId
+          ? {
+              ...m,
+              totalAggregatedMT: Number((m.totalAggregatedMT + intakeData.netWeightMT).toFixed(2)),
+              loanBalanceNaira: Math.max(0, m.loanBalanceNaira - intakeData.harvestDeductionNaira),
+            }
+          : m
+      )
+    );
+
+    // If harvest deduction applied, update member loan records
+    if (intakeData.harvestDeductionNaira > 0) {
+      setMemberLoans((prev) =>
+        prev.map((l) => {
+          if (l.memberId === intakeData.farmerId && l.outstandingBalanceNaira > 0) {
+            const deduction = Math.min(l.outstandingBalanceNaira, intakeData.harvestDeductionNaira);
+            const newBal = l.outstandingBalanceNaira - deduction;
+            return {
+              ...l,
+              amountRepaidNaira: l.amountRepaidNaira + deduction,
+              outstandingBalanceNaira: newBal,
+              status: newBal <= 0 ? 'fully_repaid' : 'partially_repaid',
+            };
+          }
+          return l;
+        })
+      );
+    }
+
+    addAuditLog(
+      'Weighbridge Grader',
+      'cooperative',
+      'LOG_INTAKE',
+      `Logged ${intakeData.netWeightMT} MT of ${intakeData.crop} (${intakeData.qualityGrade}) for ${intakeData.farmerName}`
+    );
+
+    return newIntake;
+  };
+
+  const createBulkInputCampaign = (campaignData: Omit<BulkInputCampaign, 'id'>) => {
+    const newCampaign: BulkInputCampaign = {
+      ...campaignData,
+      id: `bulk_${Date.now().toString().slice(-4)}`,
+    };
+    setBulkInputCampaigns((prev) => [newCampaign, ...prev]);
+    addAuditLog('Cooperative Admin', 'cooperative', 'CREATE_BULK_CAMPAIGN', `Created bulk input pool: ${newCampaign.title}`);
+  };
+
+  const joinBulkInputCampaign = (
+    campaignId: string,
+    memberId: string,
+    quantity: number,
+    paymentMethod: 'paid_cash' | 'financed_on_credit'
+  ) => {
+    const member = coopMembers.find((m) => m.id === memberId);
+    if (!member) return;
+
+    setBulkInputCampaigns((prev) =>
+      prev.map((c) => {
+        if (c.id === campaignId) {
+          const existing = c.participatingMembers.find((pm) => pm.memberId === memberId);
+          let updatedMembers = [];
+          if (existing) {
+            updatedMembers = c.participatingMembers.map((pm) =>
+              pm.memberId === memberId
+                ? { ...pm, unitsRequested: pm.unitsRequested + quantity, paymentStatus: paymentMethod }
+                : pm
+            );
+          } else {
+            updatedMembers = [
+              ...c.participatingMembers,
+              {
+                memberId,
+                memberName: member.name,
+                unitsRequested: quantity,
+                paymentStatus: paymentMethod,
+                distributed: false,
+              },
+            ];
+          }
+          return {
+            ...c,
+            committedUnits: c.committedUnits + quantity,
+            participatingMembers: updatedMembers,
+          };
+        }
+        return c;
+      })
+    );
+
+    if (paymentMethod === 'financed_on_credit') {
+      const campaign = bulkInputCampaigns.find((c) => c.id === campaignId);
+      const cost = (campaign?.groupDiscountPriceNaira || 30000) * quantity;
+      setCoopMembers((prev) =>
+        prev.map((m) =>
+          m.id === memberId
+            ? { ...m, loanBalanceNaira: m.loanBalanceNaira + cost }
+            : m
+        )
+      );
+    }
+
+    addAuditLog('Cooperative Admin', 'cooperative', 'JOIN_BULK_INPUT', `${member.name} ordered ${quantity} units in campaign #${campaignId}`);
+  };
+
+  const markBulkInputDistributed = (campaignId: string, memberId: string) => {
+    setBulkInputCampaigns((prev) =>
+      prev.map((c) => {
+        if (c.id === campaignId) {
+          const updated = c.participatingMembers.map((pm) =>
+            pm.memberId === memberId ? { ...pm, distributed: true } : pm
+          );
+          const allDistributed = updated.every((pm) => pm.distributed);
+          return {
+            ...c,
+            status: allDistributed ? 'distributed' : c.status,
+            participatingMembers: updated,
+          };
+        }
+        return c;
+      })
+    );
+    addAuditLog('Warehouse Officer', 'cooperative', 'DISTRIBUTE_INPUT', `Handed over input allocation to member ${memberId}`);
+  };
+
+  const updateContractProgress = (contractId: string, additionalMT: number) => {
+    setOfftakerContracts((prev) =>
+      prev.map((ctr) => {
+        if (ctr.id === contractId) {
+          const updatedFulfilled = Math.min(ctr.targetVolumeMT, ctr.fulfilledVolumeMT + additionalMT);
+          const isFulfilled = updatedFulfilled >= ctr.targetVolumeMT;
+          return {
+            ...ctr,
+            fulfilledVolumeMT: updatedFulfilled,
+            status: isFulfilled ? 'fulfilled' : 'in_fulfillment',
+          };
+        }
+        return ctr;
+      })
+    );
+    addAuditLog('Discretionary Haulage', 'cooperative', 'DISPATCH_OFFTAKER', `Dispatched ${additionalMT} MT against contract #${contractId}`);
+  };
+
+  const recordLoanRepayment = (loanId: string, amount: number) => {
+    setMemberLoans((prev) =>
+      prev.map((l) => {
+        if (l.id === loanId) {
+          const newOutstanding = Math.max(0, l.outstandingBalanceNaira - amount);
+          return {
+            ...l,
+            amountRepaidNaira: l.amountRepaidNaira + amount,
+            outstandingBalanceNaira: newOutstanding,
+            status: newOutstanding === 0 ? 'fully_repaid' : 'partially_repaid',
+          };
+        }
+        return l;
+      })
+    );
+    addAuditLog('Treasury Officer', 'cooperative', 'LOAN_REPAYMENT', `Recorded loan repayment of ₦${amount.toLocaleString()} on loan #${loanId}`);
+  };
+
+  // Smallholder Farmer Operations
+  const addFarmPlot = (plotData: Omit<FarmPlot, 'id'>) => {
+    const newPlot: FarmPlot = {
+      ...plotData,
+      id: `plot_${Date.now()}`,
+    };
+    setFarmPlots((prev) => [newPlot, ...prev]);
+    addAuditLog(plotData.farmerId, 'farmer', 'ADD_FARM_PLOT', `Logged field plot ${newPlot.name} (${newPlot.hectares} Ha of ${newPlot.crop})`);
+  };
+
+  const updateFarmPlotStage = (plotId: string, stage: CropGrowthStage) => {
+    setFarmPlots((prev) =>
+      prev.map((p) => (p.id === plotId ? { ...p, growthStage: stage } : p))
+    );
+    addAuditLog('Farmer', 'farmer', 'UPDATE_PLOT_STAGE', `Updated plot #${plotId} growth stage to ${stage}`);
+  };
+
+  const createDeliveryPass = (passData: Omit<FarmerDeliveryPass, 'id' | 'passCode' | 'createdAt' | 'status'>) => {
+    const newPass: FarmerDeliveryPass = {
+      ...passData,
+      id: `pass_${Date.now()}`,
+      passCode: `DP-${Math.floor(10000 + Math.random() * 90000)}`,
+      status: 'scheduled',
+      createdAt: new Date().toISOString(),
+    };
+    setFarmerDeliveryPasses((prev) => [newPass, ...prev]);
+    addAuditLog(passData.farmerName, 'farmer', 'CREATE_DELIVERY_PASS', `Created delivery pass ${newPass.passCode} for ${passData.estimatedBags} bags of ${passData.crop}`);
+    return newPass;
+  };
+
+  const orderBulkInputForFarmer = (campaignId: string, units: number, paymentMethod: 'cash' | 'credit') => {
+    const campaign = bulkInputCampaigns.find((c) => c.id === campaignId);
+    if (!campaign) return;
+
+    const totalCost = campaign.groupDiscountPriceNaira * units;
+    const currentMember = coopMembers.find((m) => m.id === 'mem_001') || coopMembers[0];
+
+    joinBulkInputCampaign(campaignId, currentMember.id, units, paymentMethod === 'cash' ? 'paid_cash' : 'financed_on_credit');
+
+    if (paymentMethod === 'cash') {
+      setFarmerWalletBalance((prev) => Math.max(0, prev - totalCost));
+      addTransaction({
+        userId: currentMember.id,
+        type: 'debit',
+        amount: totalCost,
+        description: `Bulk input order: ${units} ${campaign.unit} of ${campaign.title}`,
+        category: 'Input Purchase',
+        status: 'completed',
+      });
+    } else {
+      const newLoanRecord: MemberLoanRecord = {
+        id: `loan_inp_${Date.now()}`,
+        memberId: currentMember.id,
+        memberName: currentMember.name,
+        cluster: currentMember.cluster,
+        cropSeason: '2026 Wet Season',
+        loanType: 'Input Package (Fertilizer + Seeds)',
+        amountGrantedNaira: totalCost,
+        amountRepaidNaira: 0,
+        outstandingBalanceNaira: totalCost,
+        interestRatePercent: 0,
+        disbursedDate: new Date().toISOString().split('T')[0],
+        dueDate: '2026-11-30',
+        status: 'active',
+        harvestDeductionTonsCommitted: parseFloat((units * 0.1).toFixed(1)),
+      };
+      setMemberLoans((prev) => [newLoanRecord, ...prev]);
+    }
+  };
+
+  const withdrawFromWallet = (amountNaira: number, bankCode: string, bankName: string, accountNumber: string, accountName: string): boolean => {
+    if (amountNaira <= 0 || amountNaira > farmerWalletBalance) return false;
+
+    setFarmerWalletBalance((prev) => prev - amountNaira);
+    addTransaction({
+      userId: 'usr_farmer_01',
+      type: 'debit',
+      amount: amountNaira,
+      description: `NIBSS Instant Transfer to ${bankName} (${accountNumber}) - ${accountName}`,
+      category: 'Withdrawal',
+      status: 'completed',
+    });
+    addAuditLog(accountName, 'farmer', 'BANK_CASHOUT', `Withdrew ₦${amountNaira.toLocaleString()} to ${bankName} (${accountNumber})`);
+    return true;
+  };
 
   const addListing = (listingData: Omit<Listing, 'id' | 'createdAt' | 'rating'>) => {
     const newListing: Listing = {
@@ -163,16 +489,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addTransaction = (txData: Partial<Transaction> & { type: Transaction['type']; amount: number; description: string }) => {
+  const addTransaction = (txData: Omit<Transaction, 'id' | 'timestamp' | 'reference'>) => {
     const newTx: Transaction = {
-      userId: txData.userId || 'usr_current',
-      category: txData.category || 'Produce Sale',
-      status: txData.status || 'completed',
       ...txData,
-      id: txData.id || `tx_${Date.now().toString().slice(-4)}`,
-      timestamp: txData.timestamp || txData.createdAt || new Date().toISOString(),
-      createdAt: txData.createdAt || txData.timestamp || new Date().toISOString(),
-      reference: txData.reference || `REF-${Math.floor(100000 + Math.random() * 900000)}`,
+      id: `tx_${Date.now().toString().slice(-4)}`,
+      timestamp: new Date().toISOString(),
+      reference: `REF-${Math.floor(100000 + Math.random() * 900000)}`,
     };
     setTransactions((prev) => [newTx, ...prev]);
   };
@@ -248,7 +570,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     { id: 'eg_3', title: 'Soil Conditioning & Organic Fertilizer Blending', category: 'Soil Health', readTime: '6 min' }
   ];
 
-  const walletBalance = 4500000;
+  const walletBalance = farmerWalletBalance;
 
   return (
     <AppContext.Provider
@@ -287,10 +609,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         extensionGuides: EXTENSION_GUIDES,
         activeView,
         setActiveView,
-        adminTab,
-        setAdminTab,
         selectedStateFilter,
         setSelectedStateFilter,
+
+        // Cooperative Operations
+        coopMembers,
+        addCoopMember,
+        updateCoopMember,
+        warehouseIntakes,
+        logWarehouseIntake,
+        bulkInputCampaigns,
+        createBulkInputCampaign,
+        joinBulkInputCampaign,
+        markBulkInputDistributed,
+        offtakerContracts,
+        updateContractProgress,
+        memberLoans,
+        recordLoanRepayment,
+
+        // Smallholder Farmer Operations
+        farmPlots,
+        addFarmPlot,
+        updateFarmPlotStage,
+        farmerDeliveryPasses,
+        createDeliveryPass,
+        orderBulkInputForFarmer,
+        withdrawFromWallet,
       }}
     >
       {children}

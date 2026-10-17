@@ -2,14 +2,25 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { ROLE_LABELS } from '../common/RoleSwitcher';
-import { getNigerianAvatar } from '../../utils/avatarUtils';
+import { UserRole } from '../../types';
 
 interface SidebarNavProps {
   onCloseMobile?: () => void;
 }
 
 export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
-  const { activeView, setActiveView, orders, listings, adminTab, setAdminTab } = useApp();
+  const {
+    activeView,
+    setActiveView,
+    orders,
+    listings,
+    coopMembers,
+    warehouseIntakes,
+    bulkInputCampaigns,
+    offtakerContracts,
+    farmPlots,
+    farmerDeliveryPasses,
+  } = useApp();
   const { user, role } = useAuth();
 
   const isSuperAdmin = role === 'super_admin';
@@ -19,112 +30,75 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
 
   const roleInfo = ROLE_LABELS[role];
 
-  // ==========================================
-  // SUPER ADMIN SPECIFIC SIDEBAR RENDER
-  // ==========================================
-  if (isSuperAdmin && activeView === 'admin') {
-    const superAdminNavItems = [
-      { section: 'Dashboard', items: [{ id: 'super_admin', label: 'System Health Overview', icon: 'monitor_heart' }, { id: 'sa_metrics', label: 'Key Platform Metrics', icon: 'analytics' }, { id: 'sa_alerts', label: 'Critical Alerts', icon: 'warning' }] },
-      { section: 'Users & Roles', items: [{ id: 'users', label: 'All Users', icon: 'group' }, { id: 'sa_role_mgmt', label: 'Role Management', icon: 'manage_accounts' }, { id: 'sa_bulk_actions', label: 'Bulk Actions', icon: 'checklist' }, { id: 'sa_user_logs', label: 'User Activity Log', icon: 'history' }] },
-      { section: 'Access Control', items: [{ id: 'sa_perm_matrix', label: 'Permission Matrix', icon: 'key' }, { id: 'sa_feature_flags', label: 'Feature Flags', icon: 'toggle_on' }, { id: 'sa_active_sessions', label: 'Active Sessions', icon: 'sensors' }, { id: 'sa_security', label: 'Security Settings', icon: 'security' }] },
-      { section: 'Audit & Security', items: [{ id: 'sa_audit_log', label: 'Full Audit Log', icon: 'plagiarism' }, { id: 'sa_security_events', label: 'Security Events', icon: 'policy' }, { id: 'sa_data_access', label: 'Data Access Logs', icon: 'database' }, { id: 'sa_suspicious', label: 'Suspicious Activity', icon: 'gpp_maybe' }] },
-      { section: 'Platform Configuration', items: [{ id: 'sa_sys_settings', label: 'System Settings', icon: 'settings' }, { id: 'sa_payment_config', label: 'Payment & Wallet Config', icon: 'account_balance' }, { id: 'sa_notifications', label: 'Notifications', icon: 'notifications_active' }, { id: 'sa_lang_content', label: 'Languages & Content', icon: 'translate' }] },
-      { section: 'Analytics & Reports', items: [{ id: 'sa_global_analytics', label: 'Global Analytics', icon: 'monitoring' }, { id: 'sa_report_builder', label: 'Custom Report Builder', icon: 'bar_chart' }, { id: 'sa_export', label: 'Export Centre', icon: 'download' }] },
-      { section: 'Emergency Controls', items: [{ id: 'sa_freeze_market', label: 'Freeze Marketplace', icon: 'block' }, { id: 'sa_freeze_wallet', label: 'Freeze Wallet / Payments', icon: 'credit_card_off' }, { id: 'sa_emerg_broadcast', label: 'Emergency Broadcast', icon: 'campaign' }, { id: 'sa_maintenance', label: 'Maintenance Mode', icon: 'build_circle' }] },
-      { section: 'System Logs', items: [{ id: 'sa_app_logs', label: 'Application Logs', icon: 'terminal' }, { id: 'sa_api_logs', label: 'API Logs', icon: 'api' }, { id: 'sa_error_tracker', label: 'Error Tracker', icon: 'bug_report' }] },
-    ];
-
-    const handleSaSelect = (id: string) => {
-      setAdminTab(id);
-      if (onCloseMobile) onCloseMobile();
-    };
-
-    return (
-      <div className="w-full bg-[#0a0f18] text-[#f1f5f9] rounded-2xl border border-[#1e293b] p-4 shadow-2xl flex flex-col h-[calc(100vh-8rem)] overflow-y-auto no-scrollbar sticky top-20 font-body selection:bg-[#10b981]/30 selection:text-[#a7f3d0]">
-        {/* Super Admin Profile Card */}
-        <div className="p-3.5 bg-[#111927] rounded-xl border border-[#1e293b] mb-4 space-y-2.5">
-          <div className="flex items-center gap-3">
-            <img
-              src={user.photoUrl || getNigerianAvatar(user.name)}
-              alt={user.name}
-              className="w-11 h-11 rounded-full object-cover border-2 border-emerald-500/50"
-            />
-            <div className="overflow-hidden min-w-0 flex-1">
-              <h3 className="font-heading font-bold text-sm text-white truncate">{user.name}</h3>
-              <p className="text-[11px] text-emerald-400 font-bold truncate tracking-wide uppercase">Super Admin</p>
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-[10px] pt-2 border-t border-[#1e293b]">
-            <span className="text-[#64748b] flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> Live Ops
-            </span>
-            <span className="font-bold text-white px-2 py-0.5 rounded-md bg-[#1e293b] border border-[#334155]">SYS-01</span>
-          </div>
-        </div>
-
-        {/* Navigation Portals */}
-        <button
-            onClick={() => setActiveView('dashboard')}
-            className="mb-4 w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-emerald-300 bg-emerald-950/30 hover:bg-emerald-900/50 border border-emerald-500/20 flex items-center gap-2 transition-all cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          Exit to Standard App
-        </button>
-
-        <div className="space-y-5">
-          {superAdminNavItems.map((group, idx) => (
-            <div key={idx} className="space-y-1">
-              <div className="px-2 py-1 text-[10px] font-extrabold text-[#64748b] uppercase tracking-widest border-b border-[#1e293b] pb-1.5 mb-2">
-                {group.section}
-              </div>
-              {group.items.map((item) => {
-                const isActive = adminTab === item.id;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleSaSelect(item.id)}
-                    className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
-                      isActive
-                        ? 'bg-gradient-to-r from-emerald-800 to-teal-800 text-white shadow-md shadow-emerald-950/60 border border-emerald-500/40'
-                        : 'text-[#94a3b8] hover:text-white hover:bg-[#1e293b]'
-                    }`}
-                  >
-                    <span className={`material-symbols-outlined text-[18px] shrink-0 ${isActive ? 'text-emerald-300' : 'text-[#64748b]'}`}>
-                      {item.icon}
-                    </span>
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // ==========================================
-  // STANDARD SIDEBAR RENDER
-  // ==========================================
   const myOrdersCount = orders.filter(
     (o) => o.buyerId === user.id || o.sellerId === user.id || o.transporterId === user.id
   ).length;
 
   const myListingsCount = listings.filter((l) => l.sellerId === user.id).length;
 
-  const navItems = [
-    { id: 'dashboard', label: 'My Farm Dashboard', icon: 'dashboard' },
-    { id: 'marketplace', label: 'Produce Market (Buy & Sell)', icon: 'storefront', badge: `${listings.length}` },
-    { id: 'wallet', label: 'My Wallet & Safe Pay', icon: 'account_balance_wallet' },
-    { id: 'credit', label: 'Farm Loans & Credit', icon: 'payments' },
-    { id: 'orders', label: 'My Orders & Deliveries', icon: 'local_shipping', badge: myOrdersCount > 0 ? `${myOrdersCount}` : undefined },
-    { id: 'advisory', label: 'Farming Tips & Weather', icon: 'agriculture' },
-    { id: 'profile', label: 'My Profile & NIN', icon: 'person' },
-  ];
+  const getNavItemsForRole = (currentRole: UserRole) => {
+    switch (currentRole) {
+      case 'farmer':
+        return [
+          { id: 'farm_records', label: 'Farm Records', icon: 'yard', badge: `${farmPlots.length}` },
+          { id: 'produce_sales', label: 'Produce Sales', icon: 'local_shipping', badge: `${farmerDeliveryPasses.length}` },
+          { id: 'farmer_inputs', label: 'Co-op Inputs', icon: 'inventory_2', badge: `${bulkInputCampaigns.length}` },
+          { id: 'wallet', label: 'Payout Wallet', icon: 'account_balance_wallet' },
+          { id: 'profile', label: 'Farm Profile', icon: 'person' },
+        ];
+      case 'cooperative':
+        return [
+          { id: 'dashboard', label: 'Co-op Overview', icon: 'dashboard' },
+          { id: 'coop_roster', label: 'Member Farmer Roster', icon: 'groups', badge: `${coopMembers.length}` },
+          { id: 'coop_aggregation', label: 'Warehouse & Intake', icon: 'warehouse', badge: `${warehouseIntakes.length}` },
+          { id: 'coop_inputs', label: 'Bulk Input Buying', icon: 'shopping_bag', badge: `${bulkInputCampaigns.length}` },
+          { id: 'coop_contracts', label: 'Off-taker Contracts', icon: 'handshake', badge: `${offtakerContracts.filter((c) => c.status === 'in_fulfillment').length}` },
+          { id: 'coop_credit', label: 'Member Seasonal Credit', icon: 'payments' },
+          { id: 'marketplace', label: 'Commodity Market', icon: 'storefront' },
+          { id: 'profile', label: 'Co-op Profile', icon: 'domain' },
+        ];
+      case 'buyer':
+        return [
+          { id: 'dashboard', label: 'Procurement Dashboard', icon: 'dashboard' },
+          { id: 'marketplace', label: 'Sourcing & Commodities', icon: 'storefront', badge: `${listings.length}` },
+          { id: 'wallet', label: 'Escrow & Payments', icon: 'account_balance_wallet' },
+          { id: 'orders', label: 'Supply Chain Tracking', icon: 'local_shipping', badge: myOrdersCount > 0 ? `${myOrdersCount}` : undefined },
+          { id: 'profile', label: 'Corporate Profile', icon: 'business' },
+        ];
+      case 'supplier':
+        return [
+          { id: 'dashboard', label: 'Supplier Dashboard', icon: 'dashboard' },
+          { id: 'marketplace', label: 'My Input Store', icon: 'storefront', badge: `${myListingsCount}` },
+          { id: 'wallet', label: 'Earnings & Wallet', icon: 'account_balance_wallet' },
+          { id: 'orders', label: 'Fulfillment & Orders', icon: 'local_shipping', badge: myOrdersCount > 0 ? `${myOrdersCount}` : undefined },
+          { id: 'profile', label: 'Supplier Profile', icon: 'store' },
+        ];
+      case 'transporter':
+        return [
+          { id: 'dashboard', label: 'Fleet Dashboard', icon: 'dashboard' },
+          { id: 'orders', label: 'Available Loads', icon: 'local_shipping', badge: myOrdersCount > 0 ? `${myOrdersCount}` : undefined },
+          { id: 'wallet', label: 'Earnings & Wallet', icon: 'account_balance_wallet' },
+          { id: 'profile', label: 'Fleet Profile', icon: 'local_shipping' },
+        ];
+      case 'super_admin':
+      case 'gov_admin':
+      case 'institutional_admin':
+        return [
+          { id: 'admin', label: 'Executive Portal', icon: 'admin_panel_settings', badge: 'Admin' },
+          { id: 'dashboard', label: 'Platform Analytics', icon: 'analytics' },
+          { id: 'marketplace', label: 'Market Oversight', icon: 'policy', badge: `${listings.length}` },
+          { id: 'wallet', label: 'Financial Audit', icon: 'account_balance_wallet' },
+          { id: 'profile', label: 'Admin Profile', icon: 'shield_person' },
+        ];
+      default:
+        return [
+          { id: 'dashboard', label: 'Dashboard Overview', icon: 'dashboard' },
+          { id: 'profile', label: 'Profile & Identity', icon: 'person' },
+        ];
+    }
+  };
 
-  if (isAdmin) {
-    navItems.unshift({ id: 'admin', label: 'National Admin Portal', icon: 'admin_panel_settings', badge: 'Admin' });
-  }
+  const navItems = getNavItemsForRole(role);
 
   const handleSelect = (id: string) => {
     setActiveView(id);
@@ -132,25 +106,25 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-[#c1c8c2]/70 p-4 shadow-xs flex flex-col h-fit sticky top-20">
+    <aside className="w-full bg-[#f9f9f9] border-r border-[#c1c8c2] h-full flex flex-col p-4 shadow-sm rounded-xl">
       {/* User Profile Card */}
-      <div className="p-3.5 bg-[#f9fbf9] rounded-xl border border-[#e2e8e4] mb-3 space-y-2.5">
+      <div className="p-3 bg-white rounded-xl border border-[#c1c8c2] mb-4 space-y-2">
         <div className="flex items-center gap-3">
           <img
-            src={user.photoUrl || getNigerianAvatar(user.name)}
+            src={user.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
             alt={user.name}
-            className="w-11 h-11 rounded-full object-cover border-2 border-[#c1ecd4]"
+            className="w-12 h-12 rounded-full object-cover border border-[#c1c8c2]"
           />
-          <div className="overflow-hidden min-w-0 flex-1">
+          <div className="overflow-hidden">
             <h3 className="font-heading font-bold text-sm text-[#012d1d] truncate">{user.name}</h3>
-            <p className="text-[11px] text-[#3f6653] font-medium truncate">{roleInfo.title}</p>
+            <p className="text-[11px] text-[#414844] font-medium">{roleInfo.title}</p>
             <p className="text-[10px] text-[#717973] truncate">{user.state || 'Nigeria'}</p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-[11px] pt-2 border-t border-[#e2e8e4]">
-          <span className="text-[#414844] text-[11px]">NIN / KYC</span>
-          <span className={`font-bold text-[10px] px-2 py-0.5 rounded-full ${
+        <div className="flex items-center justify-between text-[11px] pt-2 border-t border-[#e2e2e2]">
+          <span className="text-[#414844]">KYC Status:</span>
+          <span className={`font-bold px-2 py-0.5 rounded-full ${
             user.verificationStatus === 'verified'
               ? 'bg-[#c1ecd4] text-[#002114]'
               : 'bg-[#ffdeac] text-[#281900]'
@@ -161,9 +135,9 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
       </div>
 
       {/* Navigation List */}
-      <div className="space-y-1">
-        <div className="px-2 py-1 text-[10px] font-bold text-[#717973] uppercase tracking-wider">
-          Platform Menu
+      <div className="flex-1 space-y-1 overflow-y-auto no-scrollbar pr-1">
+        <div className="px-3 py-1 text-[10px] font-bold text-[#717973] uppercase tracking-wider">
+          Platform Navigation
         </div>
         {navItems.map((item) => {
           const isActive = activeView === item.id;
@@ -171,21 +145,21 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
             <button
               key={item.id}
               onClick={() => handleSelect(item.id)}
-              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-semibold flex items-center justify-between transition-all ${
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-label-lg text-xs flex items-center justify-between transition-all ${
                 isActive
-                  ? 'bg-[#012d1d] text-white shadow-sm'
-                  : 'text-[#2b312d] hover:bg-[#f2f6f3]'
+                  ? 'bg-[#012d1d] text-white font-bold shadow-sm'
+                  : 'text-[#1a1c1c] hover:bg-[#e8e8e8]'
               }`}
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <span className={`material-symbols-outlined text-[20px] shrink-0 ${isActive ? 'text-[#c1ecd4]' : 'text-[#3f6653]'}`}>
+              <div className="flex items-center gap-3">
+                <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-[#c1ecd4]' : 'text-[#012d1d]'}`}>
                   {item.icon}
                 </span>
-                <span className="truncate">{item.label}</span>
+                <span>{item.label}</span>
               </div>
               {item.badge && (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-1 ${
-                  isActive ? 'bg-[#1b4332] text-[#c1ecd4]' : 'bg-[#e6ece8] text-[#3f6653]'
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                  isActive ? 'bg-[#1b4332] text-[#86af99]' : 'bg-[#e8e8e8] text-[#414844]'
                 }`}>
                   {item.badge}
                 </span>
@@ -196,15 +170,15 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
       </div>
 
       {/* Quick Action Footer */}
-      <div className="pt-3 mt-3 border-t border-[#e2e8e4]">
+      <div className="pt-4 border-t border-[#c1c8c2] space-y-2">
         <button
           onClick={() => handleSelect('create_listing')}
-          className="w-full py-2.5 px-3 bg-[#012d1d] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#1b4332] active:scale-95 transition-all shadow-xs"
+          className="w-full py-2.5 px-3 bg-[#1b4332] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#012d1d] transition-colors"
         >
           <span className="material-symbols-outlined text-[18px]">add_circle</span>
-          <span>Post Produce Listing</span>
+          <span>Post Market Listing</span>
         </button>
       </div>
-    </div>
+    </aside>
   );
 };

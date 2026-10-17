@@ -1,0 +1,6 @@
+{
+  "summary": "Implementation plan for reworking the Farmer role navigation and workflow into a clean, simple 4-tab operational system: Farm Records, Produce Sales, Inputs, and Wallet. Includes direct synchronization with cooperative warehouse intake, bulk group buying, field crop cycle logs, hyperlocal weather/pest alerts, and harvest payout settlement.",
+  "updatedAt": "2026-10-14T07:28:04.570564799Z",
+  "requestFeedback": true,
+  "userFacing": true
+}

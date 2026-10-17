@@ -15,9 +15,8 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default to Super Admin so the full administrative & platform owner capabilities are immediately active
-  const defaultAdmin = INITIAL_USERS.find((u) => u.role === 'super_admin') || INITIAL_USERS[0];
-  const [user, setUser] = useState<User | null>(defaultAdmin);
+  // Default directly to Farmer Abebe Usman to go straight into the app without registration
+  const [user, setUser] = useState<User>(INITIAL_USERS[0]);
   const [isAuthLoading, setIsAuthLoading] = useState<boolean>(false);
 
   const setRole = (role: UserRole) => {
@@ -25,12 +24,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (match) {
       setUser(match);
     } else {
-      setUser((prev) => (prev ? { ...prev, role } : { ...INITIAL_USERS[0], role }));
+      setUser((prev) => ({ ...prev, role }));
     }
   };
 
   const updateUser = (updates: Partial<User>) => {
-    setUser((prev) => (prev ? { ...prev, ...updates } : null));
+    setUser((prev) => ({ ...prev, ...updates }));
   };
 
   const loginRole = (role: UserRole) => {
@@ -38,7 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    setUser(null);
+    // Reset to default user instead of blocking on registration screens
+    setUser(INITIAL_USERS[0]);
   };
 
   return (

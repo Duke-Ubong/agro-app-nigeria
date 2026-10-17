@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useApp } from '../../context/AppContext';
-import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import { RoleSwitcher } from '../common/RoleSwitcher';
-import { AgroAppLogo } from '../common/AgroAppLogo';
-import { getNigerianAvatar } from '../../utils/avatarUtils';
+import { LanguageSwitcher } from '../common/LanguageSwitcher';
 
 interface HeaderProps {
   onToggleSidebar?: () => void;
@@ -20,115 +18,18 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
   const isInstAdmin = role === 'institutional_admin';
   const isAdmin = isSuperAdmin || isGovAdmin || isInstAdmin;
 
-  // ==========================================
-  // SUPER ADMIN SPECIFIC HEADER RENDER
-  // ==========================================
-  if (isSuperAdmin && activeView === 'admin') {
-    return (
-      <header className="sticky top-0 z-40 bg-[#0a0f18] border-b border-[#1e293b] shadow-2xl">
-        <div className="max-w-[1440px] mx-auto px-4 h-16 flex items-center justify-between gap-4">
-          
-          <div className="flex items-center gap-4 min-w-0">
-            {onToggleSidebar && (
-              <button
-                onClick={onToggleSidebar}
-                className="md:hidden p-1.5 rounded-xl text-[#94a3b8] hover:bg-[#1e293b] active:scale-95 transition-all border border-transparent hover:border-[#334155]"
-                aria-label="Toggle navigation"
-              >
-                <span className="material-symbols-outlined text-[24px]">menu</span>
-              </button>
-            )}
-
-            <div className="flex items-center gap-3 shrink-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-800 flex items-center justify-center border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                <span className="material-symbols-outlined text-white text-[18px]">admin_panel_settings</span>
-              </div>
-              <div className="hidden sm:block">
-                <h2 className="font-heading font-extrabold text-[#f1f5f9] text-sm tracking-wide flex items-center gap-2">
-                  <span>AGRO-CONNECT</span>
-                  <span className="text-[9px] font-bold bg-[#1e293b] text-emerald-400 px-1.5 py-0.5 rounded-sm border border-[#334155] uppercase">Command Center</span>
-                </h2>
-              </div>
-            </div>
-
-            {/* Global Search */}
-            <div className="hidden lg:flex flex-1 max-w-md ml-4 relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-[#64748b]">search</span>
-              <input
-                type="text"
-                placeholder="Search telemetry, user IDs, or transactions..."
-                className="w-full bg-[#111927] border border-[#1e293b] rounded-full py-1.5 pl-10 pr-4 text-xs text-white placeholder-[#64748b] focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-              />
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[9px] font-mono text-[#64748b] bg-[#1e293b] rounded border border-[#334155]">⌘</kbd>
-                <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[9px] font-mono text-[#64748b] bg-[#1e293b] rounded border border-[#334155]">K</kbd>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Quick Emergency Button */}
-            <button className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-rose-950/30 hover:bg-rose-900/50 text-rose-300 border border-rose-500/30 rounded-full text-xs font-bold transition-all cursor-pointer">
-              <span className="material-symbols-outlined text-[16px]">emergency</span>
-              <span>Emergency Controls</span>
-            </button>
-
-            <div className="w-px h-6 bg-[#1e293b] mx-1 hidden sm:block" />
-
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="p-1.5 rounded-full text-[#94a3b8] hover:text-white hover:bg-[#1e293b] relative transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-[20px]">notifications</span>
-              <span className="absolute top-1 right-1 w-2 h-2 bg-emerald-500 rounded-full border border-[#0a0f18] animate-pulse" />
-            </button>
-
-            <button
-              onClick={() => setActiveView('profile')}
-              className="flex items-center gap-2 p-1 rounded-full hover:bg-[#1e293b] transition-colors border border-[#1e293b] cursor-pointer"
-            >
-              <img
-                src={user.photoUrl || getNigerianAvatar(user.name)}
-                alt={user.name}
-                className="w-7 h-7 rounded-full object-cover border border-emerald-500/30"
-              />
-            </button>
-          </div>
-        </div>
-      </header>
-    );
-  }
-
-  // ==========================================
-  // STANDARD HEADER RENDER
-  // ==========================================
   return (
     <header className="sticky top-0 z-40 bg-[#f9f9f9] border-b border-[#c1c8c2] shadow-xs">
       {/* Top Banner Partnership Notice */}
-      <div className="bg-[#012d1d] text-white text-[11px] py-1 px-4 flex justify-between items-center border-b border-[#1b4332] overflow-hidden">
-        {/* Continuous Subtle Sliding Ticker */}
-        <div className="flex-1 overflow-hidden relative mr-3 mask-fade">
-          <div className="animate-marquee flex items-center gap-10 whitespace-nowrap">
-            <div className="flex items-center gap-2.5">
-              <span className="bg-[#1b4332] text-[#86af99] text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0">FMAFS + USUCO</span>
-              <span>Federal Ministry of Agriculture • USUCO Agro-Connect</span>
-              <span className="text-[#86af99] font-bold">•</span>
-              <span className="text-[#c1ecd4]">Official Nigerian Farm Registry & Government Support</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <span className="bg-[#1b4332] text-[#86af99] text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0">FMAFS + USUCO</span>
-              <span>Federal Ministry of Agriculture • USUCO Agro-Connect</span>
-              <span className="text-[#86af99] font-bold">•</span>
-              <span className="text-[#c1ecd4]">Official Nigerian Farm Registry & Government Support</span>
-            </div>
-          </div>
+      <div className="bg-[#012d1d] text-white text-[11px] py-1 px-4 flex justify-between items-center overflow-x-auto whitespace-nowrap border-b border-[#1b4332]">
+        <div className="flex items-center gap-2">
+          <span className="bg-[#1b4332] text-[#86af99] text-[9px] font-bold px-1.5 py-0.5 rounded">FMAFS + USUCO</span>
+          <span>Federal Ministry of Agriculture & Food Security • USUCO Agro-Connect</span>
         </div>
-
-        {/* Constant Right Bar Controls (Data Saver + Helpline) */}
-        <div className="flex items-center gap-3 shrink-0 z-10 bg-[#012d1d] pl-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={toggleLowBandwidthMode}
-            className={`text-[10px] px-2 py-0.5 rounded flex items-center gap-1 font-semibold transition-colors cursor-pointer ${
+            className={`text-[10px] px-2 py-0.5 rounded flex items-center gap-1 font-semibold transition-colors ${
               lowBandwidthMode
                 ? 'bg-[#dc9a00] text-[#281900]'
                 : 'bg-[#1b4332] text-[#86af99] hover:text-white'
@@ -137,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             <span className="material-symbols-outlined text-[12px]">signal_cellular_alt</span>
             <span>{lowBandwidthMode ? 'Data Saver: ON' : 'Data Saver'}</span>
           </button>
-          <span className="hidden sm:inline opacity-80 text-[11px]">24/7 Helpline: 0800-AGRO-CONNECT</span>
+          <span className="hidden sm:inline opacity-80">24/7 Helpline: 0800-AGRO-CONNECT</span>
         </div>
       </div>
 
@@ -154,33 +55,46 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             </button>
           )}
 
-          <div className="flex items-center gap-2">
-            <AgroAppLogo
-              iconSize={32}
-              textSize="text-lg"
-              showSubtag
-              subtext={user.state ? `${user.state} • Platform` : 'Nigeria Digital Platform'}
-              onClick={() => setActiveView('dashboard')}
-            />
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setActiveView('admin')}
-                className="text-[10px] font-bold bg-[#012d1d] text-[#c1ecd4] hover:bg-[#1b4332] px-2 py-0.5 rounded-md uppercase self-center shadow-xs border border-[#1b4332] transition-colors cursor-pointer"
-                title="Go to National Admin Portal"
-              >
-                {isSuperAdmin ? 'Super Admin' : 'Admin Portal'}
-              </button>
-            )}
-          </div>
+          <button
+            onClick={() => setActiveView('dashboard')}
+            className="flex items-center gap-2 text-left group"
+          >
+            <div className="w-9 h-9 rounded-xl bg-[#012d1d] text-white flex items-center justify-center shadow-sm group-hover:bg-[#1b4332] transition-colors">
+              <span className="material-symbols-outlined text-[22px] fill-icon">agriculture</span>
+            </div>
+            <div>
+              <div className="font-heading font-bold text-lg leading-tight text-[#012d1d] flex items-center gap-1.5">
+                <span>AgroApp</span>
+                {isAdmin && (
+                  <span className="text-[10px] font-bold bg-[#ba1a1a] text-white px-1.5 py-0.2 rounded uppercase">
+                    Admin
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-[#717973] font-medium leading-none">
+                {user.state || 'Nigeria Digital Platform'}
+              </div>
+            </div>
+          </button>
         </div>
 
         {/* Center/Right Actions */}
         <div className="flex items-center gap-2">
-          {/* Quick Role Switcher */}
-          <RoleSwitcher />
+          {/* Quick Role Switcher for seamless testing */}
+          <div className="hidden sm:block">
+            <RoleSwitcher />
+          </div>
 
           <LanguageSwitcher />
+
+          <button
+            onClick={() => setActiveView('splash')}
+            className="hidden lg:flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-[#012d1d] hover:bg-[#e8e8e8] rounded-full transition-colors border border-transparent hover:border-[#c1c8c2]"
+            title="View AgroApp Intro & African AgriTech Slides"
+          >
+            <span className="material-symbols-outlined text-[16px] text-[#0a3826]">slideshow</span>
+            <span>Intro Slides</span>
+          </button>
 
           {/* Notifications Trigger */}
           <div className="relative">
@@ -261,12 +175,18 @@ export const Header: React.FC<HeaderProps> = ({ onToggleSidebar }) => {
             title="Profile & Settings"
           >
             <img
-              src={user.photoUrl || getNigerianAvatar(user.name)}
+              src={user.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'}
               alt={user.name}
               className="w-8 h-8 rounded-full object-cover"
             />
           </button>
         </div>
+      </div>
+
+      {/* Role Switcher Mobile Floating Bar */}
+      <div className="sm:hidden px-4 py-1.5 bg-[#f3f3f3] border-t border-[#c1c8c2] flex justify-between items-center">
+        <RoleSwitcher />
+        <span className="text-[10px] text-[#414844] font-medium">Logged in as {user.name}</span>
       </div>
     </header>
   );
