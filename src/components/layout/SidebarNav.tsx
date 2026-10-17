@@ -9,18 +9,7 @@ interface SidebarNavProps {
 }
 
 export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
-  const {
-    activeView,
-    setActiveView,
-    orders,
-    listings,
-    coopMembers,
-    warehouseIntakes,
-    bulkInputCampaigns,
-    offtakerContracts,
-    farmPlots,
-    farmerDeliveryPasses,
-  } = useApp();
+  const { activeView, setActiveView, orders, listings } = useApp();
   const { user, role } = useAuth();
 
   const isSuperAdmin = role === 'super_admin';
@@ -40,22 +29,23 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
     switch (currentRole) {
       case 'farmer':
         return [
-          { id: 'farm_records', label: 'Farm Records', icon: 'yard', badge: `${farmPlots.length}` },
-          { id: 'produce_sales', label: 'Produce Sales', icon: 'local_shipping', badge: `${farmerDeliveryPasses.length}` },
-          { id: 'farmer_inputs', label: 'Co-op Inputs', icon: 'inventory_2', badge: `${bulkInputCampaigns.length}` },
-          { id: 'wallet', label: 'Payout Wallet', icon: 'account_balance_wallet' },
-          { id: 'profile', label: 'Farm Profile', icon: 'person' },
+          { id: 'dashboard', label: 'Farm Value Chain Hub', icon: 'dashboard', badge: 'Active' },
+          { id: 'marketplace', label: 'Sell Harvest & Offtake', icon: 'storefront', badge: `${listings.length}` },
+          { id: 'orders', label: 'Waybills & Transport', icon: 'local_shipping', badge: myOrdersCount > 0 ? `${myOrdersCount}` : undefined },
+          { id: 'wallet', label: 'Escrow & Digital Wallet', icon: 'account_balance_wallet' },
+          { id: 'credit', label: 'Subsidies & Farm Loans', icon: 'payments' },
+          { id: 'advisory', label: 'Weather & Agronomy', icon: 'agriculture', badge: 'NiMet 29°C' },
+          { id: 'profile', label: 'Farm Profile & Identity', icon: 'person' },
         ];
       case 'cooperative':
         return [
           { id: 'dashboard', label: 'Co-op Overview', icon: 'dashboard' },
-          { id: 'coop_roster', label: 'Member Farmer Roster', icon: 'groups', badge: `${coopMembers.length}` },
-          { id: 'coop_aggregation', label: 'Warehouse & Intake', icon: 'warehouse', badge: `${warehouseIntakes.length}` },
-          { id: 'coop_inputs', label: 'Bulk Input Buying', icon: 'shopping_bag', badge: `${bulkInputCampaigns.length}` },
-          { id: 'coop_contracts', label: 'Off-taker Contracts', icon: 'handshake', badge: `${offtakerContracts.filter((c) => c.status === 'in_fulfillment').length}` },
-          { id: 'coop_credit', label: 'Member Seasonal Credit', icon: 'payments' },
-          { id: 'marketplace', label: 'Commodity Market', icon: 'storefront' },
-          { id: 'profile', label: 'Co-op Profile', icon: 'domain' },
+          { id: 'marketplace', label: 'Group Sales', icon: 'storefront', badge: `${listings.length}` },
+          { id: 'wallet', label: 'Co-op Treasury', icon: 'account_balance_wallet' },
+          { id: 'credit', label: 'Group Financing', icon: 'payments' },
+          { id: 'orders', label: 'Bulk Orders', icon: 'local_shipping', badge: myOrdersCount > 0 ? `${myOrdersCount}` : undefined },
+          { id: 'advisory', label: 'Extension Services', icon: 'agriculture' },
+          { id: 'profile', label: 'Co-op Profile', icon: 'groups' },
         ];
       case 'buyer':
         return [
@@ -118,7 +108,9 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
           <div className="overflow-hidden">
             <h3 className="font-heading font-bold text-sm text-[#012d1d] truncate">{user.name}</h3>
             <p className="text-[11px] text-[#414844] font-medium">{roleInfo.title}</p>
-            <p className="text-[10px] text-[#717973] truncate">{user.state || 'Nigeria'}</p>
+            <p className="text-[10px] text-[#717973] truncate">
+              {user.cropTypes ? user.cropTypes.join(', ') : 'Grains'} • {user.farmSizeHectares ? `${user.farmSizeHectares} Ha` : user.state}
+            </p>
           </div>
         </div>
 
@@ -129,7 +121,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
               ? 'bg-[#c1ecd4] text-[#002114]'
               : 'bg-[#ffdeac] text-[#281900]'
           }`}>
-            {user.verificationStatus === 'verified' ? 'Verified' : 'Pending'}
+            {user.verificationStatus === 'verified' ? 'NIN Verified' : 'Pending'}
           </span>
         </div>
       </div>
@@ -137,7 +129,7 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
       {/* Navigation List */}
       <div className="flex-1 space-y-1 overflow-y-auto no-scrollbar pr-1">
         <div className="px-3 py-1 text-[10px] font-bold text-[#717973] uppercase tracking-wider">
-          Platform Navigation
+          Value Chain Navigation
         </div>
         {navItems.map((item) => {
           const isActive = activeView === item.id;
@@ -145,23 +137,44 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
             <button
               key={item.id}
               onClick={() => handleSelect(item.id)}
-              className={`w-full text-left px-3 py-2.5 rounded-xl font-label-lg text-xs flex items-center justify-between transition-all ${
+              className={`w-full text-left px-3 py-2.5 rounded-xl font-label-lg text-xs flex items-center justify-between transition-all group ${
                 isActive
-                  ? 'bg-[#012d1d] text-white font-bold shadow-sm'
+                  ? 'bg-[#012d1d] text-white font-bold shadow-md ring-1 ring-[#10b981]/50'
+                  : item.id === 'dashboard'
+                  ? 'text-[#1a1c1c] hover:bg-[#e7f5e8] border border-transparent hover:border-[#10b981]/30 font-semibold'
+                  : item.id === 'advisory'
+                  ? 'text-[#1a1c1c] hover:bg-[#e7f5e8] border border-transparent hover:border-[#10b981]/30'
                   : 'text-[#1a1c1c] hover:bg-[#e8e8e8]'
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className={`material-symbols-outlined text-[20px] ${isActive ? 'text-[#c1ecd4]' : 'text-[#012d1d]'}`}>
+                <span className={`material-symbols-outlined text-[20px] transition-transform group-hover:scale-110 ${
+                  isActive
+                    ? 'text-[#c1ecd4]'
+                    : item.id === 'dashboard' || item.id === 'advisory'
+                    ? 'text-[#0a3826]'
+                    : 'text-[#012d1d]'
+                }`}>
                   {item.icon}
                 </span>
-                <span>{item.label}</span>
+                <span className={item.id === 'advisory' && !isActive ? 'font-medium' : ''}>{item.label}</span>
               </div>
               {item.badge && (
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                  isActive ? 'bg-[#1b4332] text-[#86af99]' : 'bg-[#e8e8e8] text-[#414844]'
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 transition-all ${
+                  item.id === 'dashboard'
+                    ? isActive
+                      ? 'bg-[#1b4332] text-[#c1ecd4]'
+                      : 'bg-[#c1ecd4] text-[#002114] font-bold'
+                    : item.id === 'advisory'
+                    ? 'bg-[#10b981] text-[#022c1b] font-mono shadow-xs font-bold'
+                    : isActive
+                    ? 'bg-[#1b4332] text-[#86af99]'
+                    : 'bg-[#e8e8e8] text-[#414844]'
                 }`}>
-                  {item.badge}
+                  {(item.id === 'dashboard' || item.id === 'advisory') && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] animate-ping" />
+                  )}
+                  <span>{item.badge}</span>
                 </span>
               )}
             </button>
@@ -173,11 +186,15 @@ export const SidebarNav: React.FC<SidebarNavProps> = ({ onCloseMobile }) => {
       <div className="pt-4 border-t border-[#c1c8c2] space-y-2">
         <button
           onClick={() => handleSelect('create_listing')}
-          className="w-full py-2.5 px-3 bg-[#1b4332] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#012d1d] transition-colors"
+          className="w-full py-2.5 px-3 bg-[#012d1d] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 hover:bg-[#1b4332] active:scale-95 transition-all shadow-sm"
         >
           <span className="material-symbols-outlined text-[18px]">add_circle</span>
-          <span>Post Market Listing</span>
+          <span>Sell Harvest (Zero Fee)</span>
         </button>
+        <div className="text-[10px] text-center font-mono text-[#717973] bg-white p-1.5 rounded-lg border border-[#e2e2e2] flex items-center justify-center gap-1">
+          <span className="material-symbols-outlined text-[13px] text-[#10b981]">cell_tower</span>
+          <span>Offline USSD: <strong>*347*88#</strong></span>
+        </div>
       </div>
     </aside>
   );

@@ -12,7 +12,7 @@ export const OrdersView: React.FC = () => {
   const [fullscreenSatelliteOrder, setFullscreenSatelliteOrder] = useState<Order | null>(null);
 
   const myOrders = orders.filter((o) =>
-    o.buyerId === user.id || o.sellerName === user.name || user.role === 'transporter' || user.role === 'super_admin'
+    o.buyerId === user.id || o.sellerId === user.id || o.sellerName === user.name || user.role === 'transporter' || user.role === 'super_admin'
   );
 
   // Default expanded to the first order to immediately present the satellite tracking imagery
